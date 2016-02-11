@@ -27,7 +27,6 @@ def main():
 	# Motors setup
 	motors = Motors()
 	motors.start()
-	motors.restart()
 
 	run()
 
