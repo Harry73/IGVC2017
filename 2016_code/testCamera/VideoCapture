@@ -1,0 +1,19 @@
+import cv2
+
+
+image=cv2.imread("face.jpg",1)
+
+face_cascade=cv2.CascadeClassifier('/usr/opencv/haarcascades/haarscade_frontalface_alt.xml')
+
+gray=cv2.cvtColor(image,cv2.Color_BGR2GRAY)
+
+faces=face_cascade.detectMultiScale(gray,1.1,5)
+
+#print"Found "+str(len(faces))+"face(s)
+
+
+for (x,y,w,h) in faces:
+	cv2.rectangle(image,(x,y),(x+w,y+h),(255,0,0),2)
+
+
+cv2.imwrite('result.jpg',image)
