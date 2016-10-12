@@ -64,7 +64,7 @@ def main():
 	
 	end = time.time()
 	
-	print(start-end)
+	print(end-start)
 	
 if __name__ == "__main__":
 	main()
