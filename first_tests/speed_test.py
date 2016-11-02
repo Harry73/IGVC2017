@@ -53,7 +53,8 @@ def main1():
 	img = canny(img, 0, 50)
 	
 def main():
-	file = "wallpaper.jpg"
+	file = "whitelines1.jpg"
+
 	start = time.time()
 
 	img = cv2.imread(file, 1)

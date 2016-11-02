@@ -22,4 +22,3 @@ while True:
 	wpi.delay(1)	# wait 1 millisecond
 	wpi.digitalWrite(1, 1)
 	wpi.delayMicroseconds(1000)	# wait 1 millisecond
-
