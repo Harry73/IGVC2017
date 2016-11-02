@@ -34,7 +34,7 @@ def canny(image, lower, upper):
 	return edges
 		
 def main1():
-	file = "whitelines1.jpg"
+	file = "wallpaper.jpg"
 	img = cv2.imread(file, 1)
 	img = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
 
@@ -53,7 +53,7 @@ def main1():
 	img = canny(img, 0, 50)
 	
 def main():
-	file = "whitelines5.jpg"
+	file = "wallpaper.jpg"
 	start = time.time()
 
 	img = cv2.imread(file, 1)
