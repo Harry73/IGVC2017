@@ -18,6 +18,7 @@ def signal(delay):
 	wpi.digitalWrite(pins[0], 0)
 	wpi.digitalWrite(pins[1], 0)
 
+signal(1360)
 
 #wpi.digitalWrite(pins[0], 1)
 #wpi.digitalWrite(pins[1], 1)
