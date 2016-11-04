@@ -41,7 +41,7 @@ port='/dev/ttyUSB0',
 
 config = 0
 count = 0
-num_run = 5
+num_run = 1
 n = 0
 
 while config==0: 
@@ -122,18 +122,29 @@ while config == 1:
             print('Number of points: ' + str(num))
                 
             ang = ang_start
-            data = [0] * (num+1)
-            x = [0] * (num+1)
+            data = [0] * (num+1)	# The actual data read from the LMS
+            x = [0] * (num+1)		# x and y are the cartesian coordinate of the read data
             y = [0] * (num+1)
-            
+            r = [0] * (num+1)		# r and theta are the polar coordinates of the read data
+			theta = [0] * (num+1) 
+			
             for i in range(1, num+1):
                 data_low=ser.read()
                 data_high=ser.read()
                 data[i]=int(binascii.hexlify(data_high+data_low),16)
                 print(str(i) + ': ' + str(data[i]) + unit + '@ ' + str(ang) + ' degrees')
-                x[i] = data[i]*math.cos(ang*(3.14159/180))
+                
+				# Save the data in polar form
+				r[i] = data[i]
+				theta[i] = ang
+                
+				# Save the data in rectangular form
+				x[i] = data[i]*math.cos(ang*(3.14159/180))
                 y[i] = data[i]*math.sin(ang*(3.14159/180))
-                ang += ang_inc
+				
+				ang += ang_inc
+				
+			# Finished data transmission, pick up final messages
             status=ser.read()
             print('Status: ' + binascii.hexlify(status))
             response=ser.readline()
@@ -141,10 +152,18 @@ while config == 1:
             time2 = time.time()
             print(str(time2-time1)+' seconds')
 
+			# Show plot
             if n<num_run:
-                plt.figure(n)
-                plt.plot(x,y)
-                plt.show(block=False)
+                # Polar plot
+				ax = plt.subplot(111, projection="polar")
+				ax.plot(theta, r, color="r", linewidth=2)
+				ax.grid(True)
+				plt.show()
+				
+				# Rectangular plot
+				#plt.figure(n)
+                #plt.plot(x,y)
+                #plt.show(block=False)
                 n += 1
             else:
                 config = 0
