@@ -6,6 +6,7 @@ import serial
 import binascii
 import math
 import matplotlib.pyplot as plt
+import numpy as np
 
 ser = serial.Serial(
 
@@ -136,11 +137,11 @@ while config == 1:
                 
 				# Save the data in polar form
 				r[i] = data[i]
-				theta[i] = ang
+				theta[i] = ang*np.pi/180
                 
 				# Save the data in rectangular form
-				x[i] = data[i]*math.cos(ang*(3.14159/180))
-                y[i] = data[i]*math.sin(ang*(3.14159/180))
+				x[i] = data[i]*math.cos(ang*(np.pi/180))
+                y[i] = data[i]*math.sin(ang*(np.pi/180))
 				
 				ang += ang_inc
 				
