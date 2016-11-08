@@ -45,7 +45,7 @@ count = 0
 num_run = 1
 n = 0
 
-while config==0: 
+while config==0:
     response=ser.read()
     if binascii.hexlify(response)=='':
         print('. . .')
@@ -73,20 +73,20 @@ while config==0:
                 #ser.write(serial.to_bytes([0x02,0x00,0x0A,0x00,0x20,0x00,0x53,0x49,0x43,0x4B,0x5F,0x4C,0x4D,0x53,0xBE,0xC5])) # Settings mode
                 ser.write(serial.to_bytes([0x02,0x00,0x05,0x00,0x3B,0xB4,0x00,0x64,0x00,0x97,0x49])) # 180-1 degree variant
                 #config = 1
-                
+
             elif binascii.hexlify(response[2])=='b1':
                 print('LMS291 Connection Status Verified: ' + response[3:10])
                 #ser.write(serial.to_bytes([0x02,0x00,0x0A,0x00,0x20,0x00,0x53,0x49,0x43,0x4B,0x5F,0x4C,0x4D,0x53,0xBE,0xC5])) # Settings mode
-                
+
                 ser.write(serial.to_bytes([0x02,0x00,0x05,0x00,0x3B,0xB4,0x00,0x64,0x00,0x97,0x49])) # 180-1 degree variant
                 #ser.write(serial.to_bytes([0x02,0x00,0x05,0x00,0x3B,0xB4,0x00,0x32,0x00,0x3B,0x1F])) # 180-0.5 degree variant
-                
+
                 #ser.write(serial.to_bytes([0x02,0x00,0x05,0x00,0x3B,0x64,0x00,0x64,0x00,0x1D,0x0F])) # 100-1 degree variant
                 #ser.write(serial.to_bytes([0x02,0x00,0x05,0x00,0x3B,0x64,0x00,0x32,0x00,0xB1,0x59])) # 100-0.5 degree variant
                 #ser.write(serial.to_bytes([0x02,0x00,0x05,0x00,0x3B,0x64,0x00,0x19,0x00,0xE7,0x72])) # 100-0.25 degree variant
-                
+
                 #config = 1
-                
+
             elif binascii.hexlify(response[2])=='a0':
                 print('LMS291 Installation Mode')
                 #ser.write(serial.to_bytes([0x02,0x00,0x02,0x00,0x20,0x40,0x50,0x08])) # Switch to 38,400 Bd
@@ -127,25 +127,25 @@ while config == 1:
             x = [0] * (num+1)		# x and y are the cartesian coordinate of the read data
             y = [0] * (num+1)
             r = [0] * (num+1)		# r and theta are the polar coordinates of the read data
-			theta = [0] * (num+1) 
+            theta = [0] * (num+1)
 			
             for i in range(1, num+1):
                 data_low=ser.read()
                 data_high=ser.read()
                 data[i]=int(binascii.hexlify(data_high+data_low),16)
                 print(str(i) + ': ' + str(data[i]) + unit + '@ ' + str(ang) + ' degrees')
-                
-				# Save the data in polar form
-				r[i] = data[i]
-				theta[i] = ang*np.pi/180
-                
-				# Save the data in rectangular form
-				x[i] = data[i]*math.cos(ang*(np.pi/180))
+
+                # Save the data in polar form
+                r[i] = data[i]
+                theta[i] = ang*np.pi/180
+
+                # Save the data in rectangular form
+                x[i] = data[i]*math.cos(ang*(np.pi/180))
                 y[i] = data[i]*math.sin(ang*(np.pi/180))
-				
-				ang += ang_inc
-				
-			# Finished data transmission, pick up final messages
+
+                ang += ang_inc
+
+            # Finished data transmission, pick up final message
             status=ser.read()
             print('Status: ' + binascii.hexlify(status))
             response=ser.readline()
@@ -155,14 +155,18 @@ while config == 1:
 
 			# Show plot
             if n<num_run:
+                print(str(theta))
+                print(str(r))
+
                 # Polar plot
-				ax = plt.subplot(111, projection="polar")
-				ax.plot(theta, r, color="r", linewidth=2)
-				ax.grid(True)
-				plt.show()
-				
-				# Rectangular plot
-				#plt.figure(n)
+                ax = plt.subplot(111, projection="polar")
+                ax.plot(theta, r, color="r", linewidth=2)
+                ax.set_rmax(1000)
+                ax.grid(True)
+                plt.show()
+
+                # Rectangular plot
+                #plt.figure(n)
                 #plt.plot(x,y)
                 #plt.show(block=False)
                 n += 1
