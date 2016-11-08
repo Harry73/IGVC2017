@@ -100,7 +100,7 @@ while config==0:
                     config = 1
                 else:
                     print('Switchover failed')
-    
+
 while config == 1:
     #ser.write(serial.to_bytes([0x02,0x00,0x02,0x00,0x36,0x02,0x3E,0x1E])) # Mean Measured Data
     ser.write(serial.to_bytes([0x02,0x00,0x02,0x00,0x30,0x01,0x31,0x18])) # Single Scan
@@ -121,14 +121,14 @@ while config == 1:
                 unit = ' mm '
             num=int(binascii.hexlify(num_high+num_low),16)&int('0x3FFF',16)
             print('Number of points: ' + str(num))
-                
+
             ang = ang_start
             data = [0] * (num+1)	# The actual data read from the LMS
             x = [0] * (num+1)		# x and y are the cartesian coordinate of the read data
             y = [0] * (num+1)
             r = [0] * (num+1)		# r and theta are the polar coordinates of the read data
             theta = [0] * (num+1)
-			
+
             for i in range(1, num+1):
                 data_low=ser.read()
                 data_high=ser.read()
@@ -153,11 +153,8 @@ while config == 1:
             time2 = time.time()
             print(str(time2-time1)+' seconds')
 
-			# Show plot
-            if n<num_run:
-                print(str(theta))
-                print(str(r))
-
+            # Show plot
+            if n < num_run:
                 # Polar plot
                 ax = plt.subplot(111, projection="polar")
                 ax.plot(theta, r, color="r", linewidth=2)
