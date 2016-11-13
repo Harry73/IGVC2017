@@ -158,7 +158,7 @@ while config == 1:
                 # Polar plot
                 ax = plt.subplot(111, projection="polar")
                 ax.plot(theta, r, color="r", linewidth=2)
-                ax.set_rmax(1000)
+                #ax.set_rmax(1000)
                 ax.grid(True)
                 plt.show()
 
