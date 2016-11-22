@@ -1,5 +1,5 @@
 from GPS_Consumer import GPS_Consumer
-from GPSimport GPS
+from GPS import GPS
 from threading import Thread, Semaphore
 
 # Producer-consumer paradigm for the GPS

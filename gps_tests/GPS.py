@@ -55,7 +55,7 @@ class GPS(Thread):
 		# Run for 60 seconds for this test
 		for i in range(0,60):
 			# Get coordinates
-			position = getPosition()
+			position = self.getPosition()
 
 			# Obtain semaphores, push to gps stack, release semaphores
 			self.gps_s.acquire()

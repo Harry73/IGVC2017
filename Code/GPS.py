@@ -54,7 +54,7 @@ class GPS(Thread):
 	def run(self):
 		while True:
 			# Get coordinates
-			position = getPosition()
+			position = self.getPosition()
 
 			# Obtain semaphores, push to gps stack, release semaphores
 			self.gps_s.acquire()
