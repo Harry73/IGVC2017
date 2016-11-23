@@ -24,6 +24,8 @@ class GPS(Thread):
 
 	# Thread operation
 	def run(self):
+		time.sleep(1)	# Let GPS warm up a bit
+
 		# Run for 60 seconds for this test
 		for i in range(0, 240):
 			time.sleep(0.25)	# New request every 0.25s

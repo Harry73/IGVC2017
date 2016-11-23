@@ -31,6 +31,8 @@ sudo pip2 install gps3
 
 """
 
+import time
+import subprocess
 from gps3.agps3threaded import AGPS3mechanism
 from threading import Thread
 
@@ -39,6 +41,9 @@ class GPS(Thread):
 	def __init__(self, gps_stack, gps_n, gps_s):
 		# Call Thread initializer
 		super(GPS, self).__init__()
+
+		# Set up GPS device for 10 Hz report rate
+		subprocess.call(['gpsctl', '-c', '0.1'])
 
 		# Save stack and semaphores
 		self.gps_stack = gps_stack
@@ -52,7 +57,11 @@ class GPS(Thread):
 
 	# Thread operation
 	def run(self):
+		time.sleep(1)	# Small delay to allow sensor to warm up
+
 		while True:
+			time.sleep(0.25)	# Get new report every 0.25s
+
 			# Get coordinates
 			position = self.getPosition()
 
