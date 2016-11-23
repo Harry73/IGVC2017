@@ -1,36 +1,5 @@
-"""
-GPS
-
-Webpage:
-https://www.adafruit.com/products/746#learn-anchor
-
-Notes:
--run the following code in command window to install driver
-for GPS and run systemd service fix:
-sudo apt-get install gpsd gpsd-clients python-gps
-sudo systemctl stop gpsd.socket
-sudo systemctl disable gpsd.socket
-
--the usb adapter should show up as:
-/dev/ttyUSB0
--otherwise need to look at other usb devices:
-sudo lsusb
-
-MANUAL STARTUP:
-sudo gpsd /dev/ttyUSB0 -F /var/run/gpsd.sock
-
-MANUAL TEST OUTPUT:
-cgps -s
-
-MANUAL RESTART:
-sudo killall gpsd
-sudo gpsd /dev/ttyUSB0 -F /var/run/gpsd.sock
-
--need to install the library for gps:
-sudo pip2 install gps3
-
-"""
-
+import time
+import subprocess
 from gps3.agps3threaded import AGPS3mechanism
 from threading import Thread
 
@@ -39,6 +8,9 @@ class GPS(Thread):
 	def __init__(self, gps_stack, gps_n, gps_s):
 		# Call Thread initializer
 		super(GPS, self).__init__()
+
+		# Set up GPS sensor for 10 reports per second
+		subprocess.call(['gpsctl', '-c', '0.1'])
 
 		# Save stack and semaphores
 		self.gps_stack = gps_stack
@@ -53,7 +25,9 @@ class GPS(Thread):
 	# Thread operation
 	def run(self):
 		# Run for 60 seconds for this test
-		for i in range(0,60):
+		for i in range(0, 240):
+			time.sleep(0.25)	# New request every 0.25s
+
 			# Get coordinates
 			position = self.getPosition()
 

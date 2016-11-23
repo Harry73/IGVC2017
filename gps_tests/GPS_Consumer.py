@@ -11,12 +11,12 @@ class GPS_Consumer(Thread):
 	def run(self):
 		# Print out the most recent GPS coordinates every second for 60 seconds
 		for count in range(0, 60):
-			time.sleep(60)
+			time.sleep(1)
 			
 			self.n.acquire()
 			self.s.acquire()
 			coords = self.stack.pop()
 			self.s.release()
-				
-			print("Coords: %s" % coords)
 			
+			print("Coords: (%s, %s)" % (coords[0], coords[1]))
+
