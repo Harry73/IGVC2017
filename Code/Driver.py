@@ -15,10 +15,12 @@ def main():
 	
 	# Start all the threads
 	gps_sensor.start()
+
+	print("Done")
 	
 def get_device_paths():
 	# Get usb device paths
-	usb_identify_path = IGVC_HOME + "/gps_tests/usb_identify.sh"
+	usb_identify_path = IGVC_HOME + "/Code/usb_identify.sh"
 	(stdout, stderr) = Popen([usb_identify_path], stdout=PIPE, stderr=PIPE).communicate()
 	
 	if stderr:
