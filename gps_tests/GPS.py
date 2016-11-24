@@ -5,11 +5,14 @@ from threading import Thread
 
 class GPS(Thread):
 
-	def __init__(self, gps_stack, gps_n, gps_s):
+	def __init__(self, gps_stack, gps_n, gps_s, device_path):
 		# Call Thread initializer
 		super(GPS, self).__init__()
 
 		# Set up GPS sensor for 10 reports per second
+		subprocess.call(['sudo', 'systemctl', 'stop', 'gpsd.socket'])
+		subprocess.call(['sudo', 'systemctl', 'disable', 'gpsd.socket'])
+		subprocess.call(['sudo', 'gpsd', device_path, '-F', '/var/run/gpsd.sock'])
 		subprocess.call(['gpsctl', '-c', '0.1'])
 
 		# Save stack and semaphores
