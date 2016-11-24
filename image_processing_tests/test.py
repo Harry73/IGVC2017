@@ -19,15 +19,12 @@ def blur(image, xblur, yblur):
 	show(blur, "Gaussian Blur")
 	return blur
 
-def colorDetect(image, lower, upper, hsv):
-	if hsv:
-		img = cv2.cvtColor(image, cv2.COLOR_BGR2HLS)
-		lower = np.array(lower)
-		upper = np.array(upper)
-	else:
-		img = image			
-		
-	mask = cv2.inRange(img, lower, upper)	
+def colorDetect(image, lower, upper):
+	hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+	lower = np.array(lower)
+	upper = np.array(upper)	
+	
+	mask = cv2.inRange(hsv, lower, upper)
 	result = cv2.bitwise_and(image, image, mask=mask)
 	
 	show(result, "color detection")
@@ -49,8 +46,8 @@ def main2():
 	img = cv2.imread(file, 1)
 
 	# RED
-	lower = np.array([0, 50, 50])
-	upper = np.array([10, 255, 255])
+	lower = np.array([50, 0, 0])
+	upper = np.array([180, 255, 255])
 
 	# GREEN
 	# lower = np.array([50, 0, 0])
@@ -66,23 +63,53 @@ def main2():
 	show(result, "final")
 	
 def main1():
-	file = "whitelines1.jpg"
-	img = cv2.imread(file, 1)
-	img = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
+	file = "whitelines4.jpg"
+	original = cv2.imread(file)
+	
+	# Prepare for color shifting
+	img = original.astype(np.int32)
+	
+	# Remove color? 0=B, 1=G, 2=R
+	#img[:,:,0] = img[:,:,0]-100
+	#img[:,:,1] = img[:,:,1]-100
+	img[:,:,2] = 0
+	
+	# Get back in the right range and convert back to a normal picture
+	img = np.clip(img, 0, 255)
+	img = img.astype(np.uint8)
+	
+	show(img, "colored image")
+	
+	img = colorDetect(img, [0, 0, 0], [45, 255, 255])
+	
+	img = blur(img, 11, 11)
+	#img = cv2.fastNlMeansDenoisingColored(img, None, 10, 10, 7, 21)
+	#show(img, "less noise")
+	
+	#img = canny(img, 0, 50)
+	
+	img = grayscale(img)
+	img = cv2.threshold(img, 50, 255, cv2.THRESH_BINARY)[1]
+	show(img, "thresher")
+	
+	lines = cv2.HoughLines(img, 1, np.pi/180, 400)
+		
+	for line in lines:
+		for rho, theta in line:
+			a = np.cos(theta)
+			b = np.sin(theta)
+			x0 = a*rho
+			y0 = b*rho
+			x1 = int(x0 + 1000*(-b))
+			y1 = int(y0 + 1000*(a))
+			x2 = int(x0 - 1000*(-b))
+			y2 = int(y0 - 1000*(a))
 
-	img[:,:,0] = img[:,:,0]
-	#img[:,:,1] = img[:,:,1]+60
-	#img[:,:,2] = img[:,:,2]-210
+			# Draw lines on the original image in red
+			cv2.line(original,(x1,y1),(x2,y2), (0, 0, 255), 2)
 	
-	show(img, "image")
+	show(original, "hough")
 	
-#	img = colorDetect(img, [0,0,0], [255,255,255], True)
-
-	img = blur(img, 25, 25)
-	
-#	img = grayscale(img)
-	
-	img = canny(img, 0, 50)
 	
 def main():
 	file = "whitelines5.jpg"
