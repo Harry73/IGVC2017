@@ -1,0 +1,18 @@
+Setup: 
+ONE
+Type: sudo odroid-config
+TWO
+Go to Advanced Options and select I2C
+THREE
+Select Finish
+
+Note: this may not be enough for the odroid, there may be additional steps. Sources were not concise to setup. 
+
+Info: 
+ODroid I2C Slave address: 0x00
+Pins 8 and 9 are for a single I2C setup. We only need these for the compass. 
+One is a clock or toggle, the other is a data flow. So 8 would be the clock and 9 would be the data. 
+
+It also needs a GND and +3.3Vdc to +5Vdc pins. 
+
+The compass will need to be calibrated in order for readings to be correct, the calibration python code will be added to this folder. 
