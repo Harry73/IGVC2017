@@ -56,14 +56,8 @@ def run():
 				pygame.draw.rect(WINDOW, YELLOW, (200, 0, 100, 500))
 				pygame.draw.rect(WINDOW, RED, (200, 200, 100, 100))
 
-				label = FONT.render("{0}, {1}".format(mousex, mousey), 1, BLACK)
-				WINDOW.blit(label, (400, 10))
-
 			elif event.type == KEYDOWN and event.key == K_RETURN:
 				start = True
-
-		# Redraw window
-		pygame.display.update()
 
 		# Handle vehicle control
 		if start:
@@ -71,27 +65,39 @@ def run():
 				wpi.digitalWrite(drivePin, 1)
 				wpi.delayMicroseconds(1360)
 				wpi.digitalWrite(drivePin, 0)
+				value1 = "stop"
 			elif mousey < 200:						# forward
 				wpi.digitalWrite(drivePin, 1)
-				wpi.delayMicroseconds(-457/200.0*mousey+1857.0)
+				wpi.delayMicroseconds(int(-457/200.0*mousey+1857.0))
 				wpi.digitalWrite(drivePin, 0)
+				value1 = str(int(-457/200.0*mousey+1857.0))
 			elif mousey > 300:						# backward
 				wpi.digitalWrite(drivePin, 1)
-				wpi.delayMicroseconds(-57/25.0*mousey+2004.0)
+				wpi.delayMicroseconds(int(-57/25.0*mousey+2004.0))
 				wpi.digitalWrite(drivePin, 0)
+				value1 = str(int(-57/25.0*mousey+2004.0))
 				
 			if mousex >= 200 and mousex <= 300:		# no turn
 				wpi.digitalWrite(turnPin, 1)
 				wpi.delayMicroseconds(1360)
 				wpi.digitalWrite(turnPin, 0)
+				value2 = "stop"
 			elif mousex < 200:						# left
 				wpi.digitalWrite(turnPin, 1)
-				wpi.delayMicroseconds(57/25.0*mousex+864)
+				wpi.delayMicroseconds(int(57/25.0*mousex+864))
 				wpi.digitalWrite(turnPin, 0)
+				value2 = str(int(57/25.0*mousex+864))
 			elif mousex > 300:						# right
 				wpi.digitalWrite(turnPin, 1)
-				wpi.delayMicroseconds(457/200.0*mousex+1429/2.0)
+				wpi.delayMicroseconds(int(457/200.0*mousex+1429/2.0))
 				wpi.digitalWrite(turnPin, 0)
+				value2 = str(int(457/200.0*mousex+1429/2.0))
+
+			label = FONT.render("{0}, {1}".format(value1, value2), 1, BLACK)
+			WINDOW.blit(label, (400, 10))
+
+		# Redraw window
+		pygame.display.update()
 
 if __name__ == "__main__":
 	main()
