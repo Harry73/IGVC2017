@@ -1,16 +1,17 @@
+import math
 import heapq
 
 class Cell(object):
-	def __init__(self, x, y, reachable):
+	def __init__(self, x, y):
 		# f is the heuristic cost
-		self.reachable = reachable
+		self.reachable = True
 		self.x = x
 		self.y = y
 		self.parent = None
 		self.g = 0
 		self.h = 0
 		self.f = 0
-
+		
 class AStar(object):
 	def __init__(self):
 		self.frontier = []		# open list
@@ -24,27 +25,22 @@ class AStar(object):
 	def init_grid(self, width, height, obstacles, start, goal):
 		self.grid_height = height
 		self.grid_width = width
+		
+		# initialize grid
 		for x in range(self.grid_width):
 			for y in range(self.grid_height):
-				if (x, y) in obstacles:
-					reachable = False
-				else:
-					reachable = True
-				self.grid.append(Cell(x, y, reachable))
+				self.grid.append(Cell(x, y))
+		
+		# Set up any obstacles
+		for obstacle in obstacles:
+			self.get_cell(obstacle[0], obstacle[1]).reachable = False
+		
 		self.start = self.get_cell(*start)
 		self.goal = self.get_cell(*goal)
 
-	# Use to update the map
-	def set_start(self, start):
-		self.start = start
-	def set_goal(self, goal):
-		self.goal = goal
-	def set_cell(self, x, y, reachable):
-		self.grid[x * self.grid_height + y].reachable = reachable
-		
 	# Calculate heuristic value of cell (manhattan distance)
 	def get_heuristic(self, cell):
-		return abs(cell.x - self.goal.x) + abs(cell.y - self.goal.y)
+		return 6*(abs(cell.x - self.goal.x) + abs(cell.y - self.goal.y))
 
 	# Return a cell
 	def get_cell(self, x, y):
@@ -77,32 +73,31 @@ class AStar(object):
 
 	# Calculate data for cell
 	def update_cell(self, adj, cell):
-		adj.g = cell.g + 1
+		adj.g = cell.g + 5
 		adj.h = self.get_heuristic(adj)
 		adj.parent = cell
 		adj.f = adj.h + adj.g
 
 	# Find a path through a grid
 	def solve(self):
-		# add starting cell to open heap queue
+		# Add starting cell to open heap queue
 		heapq.heappush(self.frontier, (self.start.f, self.start))
+
 		while len(self.frontier):
-			# pop cell from heap queue
+			# Pop cell from heap queue
 			f, cell = heapq.heappop(self.frontier)
-			# add cell to explored list so we don't process it twice
+			# Add cell to explored list so we don't process it twice
 			self.explored.add(cell)
-			# if ending cell, return found path
+			# If ending cell, return found path
 			if cell is self.goal:
 				return self.get_path()
-			# get adjacent cells for cell
+			# Get adjacent cells for cell
 			adj_cells = self.get_adjacent_cells(cell)
 			for adj_cell in adj_cells:
 				if adj_cell.reachable and adj_cell not in self.explored:
 					if (adj_cell.f, adj_cell) in self.frontier:
-						# if adj cell in open list, check if current path is
-						# better than the one previously found
-						# for this adj cell.
-						if adj_cell.g > cell.g + 10:
+						# If adj cell in open list, check if current path is better than the one previously found for this adj cell
+						if adj_cell.g > cell.g + 5:
 							self.update_cell(adj_cell, cell)
 					else:
 						self.update_cell(adj_cell, cell)
@@ -113,7 +108,7 @@ class AStar(object):
 a = AStar()
 i = 0
 walls = []
-with open("Maps/map5.txt", "r") as f:
+with open("Maps/map6.txt", "r") as f:
 	size = f.readline()
 	for line in f:
 		j = 0
