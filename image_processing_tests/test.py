@@ -1,4 +1,5 @@
 # RasPi: 159.91.228.47
+# Odroid: 159.91.228.92
 
 import time
 import cv2
@@ -40,31 +41,67 @@ def canny(image, lower, upper):
 	edges = cv2.Canny(image, lower, upper)
 	show(edges, "Edge Detection")
 	return edges
-	
-def main2():
-	file = "whitelines5.jpg"
-	img = cv2.imread(file, 1)
-
-	# RED
-	lower = np.array([50, 0, 0])
-	upper = np.array([180, 255, 255])
-
-	# GREEN
-	# lower = np.array([50, 0, 0])
-	# upper = np.array([70, 255, 255])
-
-	# BLUE
-	# lower = np.array([110, 0, 0])
-	# upper = np.array([130, 255, 255])
-
-	hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-	mask = cv2.inRange(hsv, lower, upper)
-	result = cv2.bitwise_and(img, img, mask=mask)
-	show(result, "final")
-	
+		
+# For playing
 def main1():
-	file = "whitelines4.jpg"
+	file = "whitelines5.jpg"
 	original = cv2.imread(file)
+	img = original	# img to play with
+	show(img, "original")
+	
+	img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+	show(img, "hsv")
+	
+	# Prepare for color shifting
+	img = img.astype(np.int32)
+	
+	# Remove color. 012 = BGR = HSV
+	#img[:,:,0] = img[:,:,0]-100
+	#img[:,:,1] = img[:,:,1]-100
+	img[:,:,2] = 0
+	
+	# Get back in the right range and convert back to a normal picture
+	img = np.clip(img, 0, 255)
+	img = img.astype(np.uint8)
+	
+	show(img, "colored image")
+	
+	img = colorDetect(img, [0, 0, 0], [20, 255, 255])
+	
+	img = blur(img, 31, 31)
+	#img = cv2.fastNlMeansDenoisingColored(img, None, 10, 10, 7, 21)
+	#show(img, "less noise")
+	
+	#img = canny(img, 0, 50)
+	
+	img = grayscale(img)
+	img = cv2.threshold(img, 10, 255, cv2.THRESH_BINARY)[1]
+	show(img, "threshold")
+	
+	lines = cv2.HoughLines(img, 1, np.pi/180, 400)
+		
+	for line in lines:
+		for rho, theta in line:
+			a = np.cos(theta)
+			b = np.sin(theta)
+			x0 = a*rho
+			y0 = b*rho
+			x1 = int(x0 + 1000*(-b))
+			y1 = int(y0 + 1000*(a))
+			x2 = int(x0 - 1000*(-b))
+			y2 = int(y0 - 1000*(a))
+
+			# Draw lines on the original image in red
+			cv2.line(original,(x1,y1),(x2,y2), (0, 0, 255), 2)
+	
+	show(original, "hough")
+	
+
+# "Normal" processing sequence
+def main():
+	file = "whitelines5.jpg"
+	original = cv2.imread(file)
+	show(original, "original")
 	
 	# Prepare for color shifting
 	img = original.astype(np.int32)
@@ -80,7 +117,7 @@ def main1():
 	
 	show(img, "colored image")
 	
-	img = colorDetect(img, [0, 0, 0], [45, 255, 255])
+	img = colorDetect(img, [0, 0, 0], [30, 255, 255])
 	
 	img = blur(img, 11, 11)
 	#img = cv2.fastNlMeansDenoisingColored(img, None, 10, 10, 7, 21)
@@ -109,19 +146,6 @@ def main1():
 			cv2.line(original,(x1,y1),(x2,y2), (0, 0, 255), 2)
 	
 	show(original, "hough")
-	
-	
-def main():
-	file = "whitelines5.jpg"
-	img = cv2.imread(file, 1)
-	
-	img = grayscale(img)
-	
-	img = blur(img, 9,9)
-	
-	img = colorDetect(img, 190, 255, False)
-	
-	img = canny(img, 50, 350)
 	
 if __name__ == "__main__":
 	main1()
