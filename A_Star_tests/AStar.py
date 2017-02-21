@@ -11,6 +11,14 @@ class Cell(object):
 		self.g = 0
 		self.h = 0
 		self.f = 0
+
+	# Method that is actually called by print()
+	def __repr__(self):
+		return self.__str__()
+		
+	# toString method
+	def __str__(self):
+		return "(" + str(self.x) + ", " + str(self.y) + ")"		
 		
 class AStar(object):
 	def __init__(self):
@@ -50,13 +58,25 @@ class AStar(object):
 	def get_adjacent_cells(self, cell):
 		neighbors = []
 		if cell.x < self.grid_width - 1:
-			neighbors.append(self.get_cell(cell.x + 1, cell.y))
+			if cell.y < self.grid_height - 1:
+				neighbors.append(self.get_cell(cell.x + 1, cell.y + 1)) # down right
+			neighbors.append(self.get_cell(cell.x + 1, cell.y))	# right
+			if cell.y > 0:
+				neighbors.append(self.get_cell(cell.x + 1, cell.y - 1)) # up right
+
 		if cell.y > 0:
-			neighbors.append(self.get_cell(cell.x, cell.y - 1))
+			neighbors.append(self.get_cell(cell.x, cell.y - 1)) # up
+
 		if cell.x > 0:
-			neighbors.append(self.get_cell(cell.x - 1, cell.y))
+			if cell.y > 0:
+				neighbors.append(self.get_cell(cell.x - 1, cell.y - 1)) # up left
+			neighbors.append(self.get_cell(cell.x - 1, cell.y)) # left
+			if cell.y < self.grid_height - 1:
+				neighbors.append(self.get_cell(cell.x - 1, cell.y + 1)) # down left
+
 		if cell.y < self.grid_height - 1:
-			neighbors.append(self.get_cell(cell.x, cell.y + 1))
+			neighbors.append(self.get_cell(cell.x, cell.y + 1)) # down
+
 		return neighbors
 
 	# Trace parents back to start and then reverse the path
@@ -88,9 +108,11 @@ class AStar(object):
 			f, cell = heapq.heappop(self.frontier)
 			# Add cell to explored list so we don't process it twice
 			self.explored.add(cell)
+			
 			# If ending cell, return found path
 			if cell is self.goal:
 				return self.get_path()
+			
 			# Get adjacent cells for cell
 			adj_cells = self.get_adjacent_cells(cell)
 			for adj_cell in adj_cells:
@@ -103,27 +125,3 @@ class AStar(object):
 						self.update_cell(adj_cell, cell)
 						# add adj cell to open list
 						heapq.heappush(self.frontier, (adj_cell.f, adj_cell))
-
-
-a = AStar()
-i = 0
-walls = []
-with open("Maps/map6.txt", "r") as f:
-	size = f.readline()
-	for line in f:
-		j = 0
-		for char in line:
-			if char == '#':
-				walls.append((j, i))
-			elif char == 's':
-				start = (j, i)
-			elif char == 'g':
-				goal = (j, i)
-			j += 1
-		i += 1
-
-size = size.split()
-a.init_grid(int(size[0]), int(size[1]), walls, start, goal)
-#a.set_cell(5, 8, False)
-path = a.solve()
-print(path)
