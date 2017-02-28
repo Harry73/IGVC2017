@@ -39,7 +39,7 @@ import numpy as np
 from threading import Thread
 
 class LMS(Thread):
-	def __init__(self, lms_stack, lms_n, lms_s, device_path, stop):
+	def __init__(self, lms_stack, lms_n, lms_s, device_path):
 		# Call Thread initializer
 		super(LMS, self).__init__()
 			
@@ -50,7 +50,7 @@ class LMS(Thread):
 		self.lms_stack = lms_stack
 		self.lms_n = lms_n
 		self.lms_s = lms_s
-		self.stop = stop
+		self.stopped = False
 		
 		# Open serial port for the device		
 		self.ser = serial.Serial(
@@ -183,5 +183,9 @@ class LMS(Thread):
 					self.lms_s.release()
 					self.lms_n.release()
 
-					if self.stop:
+					if self.stopped:
 						break
+						
+	# Tell run() to stop
+	def stop(self):
+		self.stopped = True

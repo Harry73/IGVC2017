@@ -16,7 +16,7 @@ from threading import Thread
 
 class GPS(Thread):
 
-	def __init__(self, gps_stack, gps_n, gps_s, device_path, stop):
+	def __init__(self, gps_stack, gps_n, gps_s, device_path):
 		# Call Thread initializer
 		super(GPS, self).__init__()
 		
@@ -34,7 +34,7 @@ class GPS(Thread):
 		self.gps_stack = gps_stack
 		self.gps_n = gps_n
 		self.gps_s = gps_s
-		self.stop = stop
+		self.stopped = False
 
 		# Instantiates AGPS3 mechanisms and sets up the data stream
 		self.agps_thread = AGPS3mechanism()
@@ -47,7 +47,7 @@ class GPS(Thread):
 		time.sleep(1)	# Let GPS warm up a bit
 
 		# Run until Driver calls for a stop
-		while not self.stop:
+		while not self.stopped:
 			time.sleep(0.25)	# New request every 0.25s
 
 			# Get coordinates
@@ -65,3 +65,6 @@ class GPS(Thread):
 		longitude = self.agps_thread.data_stream.lon
 		position = (latitude, longitude)
 		return position
+
+	def stop(self):
+		self.stopped = True
