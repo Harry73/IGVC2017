@@ -29,8 +29,10 @@ class Camera(Thread):
 		self.stopped = False
 
 		# Instantiates cameras
-		self.right_camera = cv2.VideoCapture(0)
-		self.left_camera = cv2.VideoCapture(1)
+		right_camera_index = int(os.readlink("/dev/right_cam")[-1])
+		left_camera_index = int(os.readlink("/dev/left_cam")[-1])
+		self.right_camera = cv2.VideoCapture(right_camera_index)
+		self.left_camera = cv2.VideoCapture(left_camera_index)
 	
 	def run(self):
 		# Run until Driver calls for a stop
