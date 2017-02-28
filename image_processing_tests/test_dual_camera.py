@@ -1,5 +1,6 @@
 # Odroid: 159.91.228.92
 
+import os
 import cv2
 import numpy as np
 
@@ -25,20 +26,22 @@ def process(frame):
 
 # Take picture from camera and apply Hough lines transform
 def main():
-	cam1 = cv2.VideoCapture(0)
-	cam2 = cv2.VideoCapture(1)
+	right_cam_index = int(os.readlink("/dev/right_cam")[-1])
+	left_cam_index = int(os.readlink("/dev/left_cam")[-1])
+	right_cam = cv2.VideoCapture(0)
+	left_cam = cv2.VideoCapture(1)
 
 	while True:
-		ret, frame1 = cam1.read()
-		ret, frame2 = cam2.read()
+		ret, right_frame = right_cam.read()
+		ret, left_frame = left_cam.read()
 
-		frame1 = process(frame1)
-		frame2 = process(frame2)
+		right_frame = process(right_frame)
+		left_frame = process(left_frame)
 
 
 		# Display the resulting frame
-		cv2.imshow('frame1', frame1)
-		cv2.imshow('frame2', frame2)
+		cv2.imshow('right frame', right_frame)
+		cv2.imshow('left frame', left_frame)
 		if cv2.waitKey(1) & 0xFF == ord('q'):
 			break
 
