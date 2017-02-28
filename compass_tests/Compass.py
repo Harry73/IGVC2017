@@ -8,11 +8,11 @@ import time
 import math
 
 class Compass():
-	def __init__(self)
+	def __init__(self):
 		self.bus = smbus.SMBus(0)
 		#unsure if this is the correct address on the ODroid
 
-		self.address = 0x00
+		self.address = 0x1e
 		#some settings options
 
 		self.write_byte(0,0b01110000) #8 samples @ 15Hz 
