@@ -28,8 +28,8 @@ def process(frame):
 def main():
 	right_cam_index = int(os.readlink("/dev/right_cam")[-1])
 	left_cam_index = int(os.readlink("/dev/left_cam")[-1])
-	right_cam = cv2.VideoCapture(0)
-	left_cam = cv2.VideoCapture(1)
+	right_cam = cv2.VideoCapture(right_cam_index)
+	left_cam = cv2.VideoCapture(left_cam_index)
 
 	while True:
 		ret, right_frame = right_cam.read()
@@ -45,8 +45,8 @@ def main():
 		if cv2.waitKey(1) & 0xFF == ord('q'):
 			break
 
-	cam1.release()
-	cam2.release()
+	right_cam.release()
+	left_cam.release()
 	cv2.destroyAllWindows()
 
 if __name__ == "__main__":
