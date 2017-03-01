@@ -10,8 +10,8 @@ Description: Camera Manager Module
 """
 
 import cv2
-import numpy as np
 import logging
+import numpy as np
 from threading import Thread
 
 class Camera(Thread):
