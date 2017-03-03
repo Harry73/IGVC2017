@@ -2,10 +2,10 @@
 File: LMS.py
 
 Description: LMS Data Collector
-	Send serial commands to set up the LiDAR device. 
-	
+	Send serial commands to set up the LiDAR device.
+
 	Collects a new set of data every 1 second
-	and saves the data to a thread-safe stack. 
+	and saves the data to a thread-safe stack.
 """
 
 # How to Configure
@@ -42,7 +42,7 @@ class LMS(Thread):
 	def __init__(self, lms_stack, lms_n, lms_s, device_path):
 		# Call Thread initializer
 		super(LMS, self).__init__()
-			
+
 		# Get IGVC logger
 		self.logger = logging.getLogger("IGVC")
 
@@ -51,8 +51,8 @@ class LMS(Thread):
 		self.lms_n = lms_n
 		self.lms_s = lms_s
 		self.stopped = False
-		
-		# Open serial port for the device		
+
+		# Open serial port for the device
 		self.ser = serial.Serial(
 			port=device_path,
 			baudrate=38400,
@@ -64,7 +64,7 @@ class LMS(Thread):
 
 		self.config = 0
 		self.count = 0
-		
+
 		setup()
 
 	def setup(self):
@@ -157,7 +157,7 @@ class LMS(Thread):
 						data_low = self.ser.read()
 						data_high = self.ser.read()
 						data[i]=int(binascii.hexlify(data_high+data_low),16)
-						
+
 						# Save the data in polar form
 						r[i] = data[i]
 						theta[i] = ang*np.pi/180
@@ -185,7 +185,7 @@ class LMS(Thread):
 
 					if self.stopped:
 						break
-						
+
 	# Tell run() to stop
 	def stop(self):
 		self.stopped = True

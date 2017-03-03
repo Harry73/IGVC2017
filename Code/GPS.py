@@ -3,9 +3,9 @@ File: GPS.py
 
 Description: GPS Data Collector
 	Sets up the Adafruit GPS device with system commands.
-	
+
 	Collects a new set of coordinates every 0.25 seconds
-	and saves the coordinates to a thread-safe stack. 
+	and saves the coordinates to a thread-safe stack.
 """
 
 import time
@@ -19,7 +19,7 @@ class GPS(Thread):
 	def __init__(self, gps_stack, gps_n, gps_s, device_path):
 		# Call Thread initializer
 		super(GPS, self).__init__()
-		
+
 		# Get IGVC logger
 		self.logger = logging.getLogger("IGVC")
 

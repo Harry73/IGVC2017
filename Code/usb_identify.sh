@@ -1,6 +1,7 @@
 #!/bin/bash
+# NOW DEPRECATED IN FAVOR OF UDEV RULES AND LINKS
 
-for sysdevpath in $(find /sys/bus/usb/devices/usb*/ -name dev); do 
+for sysdevpath in $(find /sys/bus/usb/devices/usb*/ -name dev); do
 (
     syspath="${sysdevpath%/dev}"
     devname="$(udevadm info -q name -p $syspath)"

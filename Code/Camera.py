@@ -3,25 +3,27 @@ File: Camera.py
 
 Description: Camera Manager Module
 	Controls picture-taking with the two cameras and image processing.
-	
+
 	Takes a new set of pictures, processes the images to obtain
 	the coordinates of the white lines of the course, and saves
-	the lines to a thread-safe stack. 
+	the lines to a thread-safe stack.
 """
 
 import cv2
-import logging
+import time
 import numpy as np
+import logging
 from threading import Thread
 
 class Camera(Thread):
-	def __init__(self, camera_stack, camera_n, camera_s):
+
+	def __init__(self, camera_stack, camera_n, camera_s, right_camera_index, left_camera_index):
 		# Call Thread initializer
 		super(Camera, self).__init__()
-		
+
 		# Get IGVC logger
 		self.logger = logging.getLogger("IGVC")
-		
+
 		# Save stack and semaphores
 		self.camera_stack = camera_stack
 		self.camera_n = camera_n
@@ -29,16 +31,12 @@ class Camera(Thread):
 		self.stopped = False
 
 		# Instantiates cameras
-		right_camera_index = int(os.readlink("/dev/right_cam")[-1])
-		left_camera_index = int(os.readlink("/dev/left_cam")[-1])
 		self.right_camera = cv2.VideoCapture(right_camera_index)
 		self.left_camera = cv2.VideoCapture(left_camera_index)
-	
+
 	def run(self):
 		# Run until Driver calls for a stop
 		while not self.stopped:
-			time.sleep(0.5)		# New image set every 0.5 seconds
-			
 			# Take a picture with each of the cameras
 			ret, right_frame = self.right_camera.read()
 			ret, left_frame = self.left_camera.read()
@@ -46,7 +44,7 @@ class Camera(Thread):
 			# Perform image processing on each frame
 			right_lines = process(right_frame)
 			left_lines = process(left_frame)
-			
+
 			# Further processing of the two frames combined would go here...
 			"""
 			if lines != None:
@@ -70,11 +68,11 @@ class Camera(Thread):
 			self.camera_stack.append(left_lines)
 			self.camera_s.release()
 			self.camera_n.release()
-			
+
 		# Free the cameras when complete
 		self.right_camera.release()
 		self.left_camera.release()
-	
+
 	# Standard image processing sequence to be performed on each image taken
 	def process(self, frame):
 		# Canny edge detection and Hough Line Transform
