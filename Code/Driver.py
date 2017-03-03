@@ -5,7 +5,7 @@ Description: Starts threads to manage sensors and run vehicle
 	Uses links created by udev rules to determine the hardware path
 	of each usb device.
 
-	Currently starts GPS, LMS, and Camera threads
+	Currently starts GPS, LMS, Camera, and Compass threads
 """
 
 import os
@@ -41,28 +41,47 @@ def main():
 	lms_s = Semaphore(1)
 	lms_sensor = LMS(lms_data_stack, lms_n, lms_s, device_to_path["LMS"])
 
-	# LMS setup
+	# Camera setup
 	camera_lines_stack = []
 	camera_n = Semaphore(0)
 	camera_s = Semaphore(1)
 	camera_controller = Camera(camera_lines_stack, camera_n, camera_s, device_to_path["RIGHT_CAM"], device_to_path["LEFT_CAM"])
 
-	# Start all the threads
+	# Compass setup
+	compass_stack = []
+	compass_n = Semaphore(0)
+	compass_s = Semaphore(1)
+	compass = Compass(compass_stack, compass_n, compass_s)
+	
+	# Start the threads
 	gps_sensor.start()
 	lms_sensor.start()
 	camera_controller.start();
+	compass.start();
 
 	time.sleep(30)
 
-	# Stop and clean up the threads
+	# Stop the threads
 	gps_sensor.stop()
 	lms_sensor.stop()
 	camera_controller.stop()
+	compass.stop()
+
+	# Clean up the threads
 	gps_sensor.join()
 	lms_sensor.join()
 	camera_controller.join()
-
-	print("Done")
+	compass.join()
+	
+	print("--------------- GPS STACK ---------------")
+	print(gps_coords_stack)
+	print("--------------- LMS STACK ---------------")
+	print(lms_data_stack)
+	print("--------------- CAMERA STACK ---------------")
+	print(camera_lines_stack)
+	print("--------------- COMPASS STACK ---------------")
+	print(compass_stack)
+	print("--------------- DONE ---------------")
 
 def get_device_paths():
 	# Get usb device paths from udev rules

@@ -42,8 +42,8 @@ class Camera(Thread):
 			ret, left_frame = self.left_camera.read()
 
 			# Perform image processing on each frame
-			right_lines = process(right_frame)
-			left_lines = process(left_frame)
+			right_lines = self.process(right_frame)
+			left_lines = self.process(left_frame)
 
 			# Further processing of the two frames combined would go here...
 			"""
