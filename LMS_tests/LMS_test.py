@@ -8,7 +8,7 @@ import numpy as np
 
 class LMS_test
 
-def __init__(self)
+def __init__(self):
 
 	ser = serial.Serial(
 
@@ -76,7 +76,7 @@ def __init__(self)
 		            print('Switchover failed')
 
 #scans based on settings and returns values in an array
-def scan(self)
+def scan(self):
 	#ser.write(serial.to_bytes([0x02,0x00,0x02,0x00,0x36,0x02,0x3E,0x1E])) # Mean Measured Data
 	ser.write(serial.to_bytes([0x02,0x00,0x02,0x00,0x30,0x01,0x31,0x18])) # Single Scan
 	response=ser.read()
