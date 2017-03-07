@@ -1,6 +1,8 @@
 import math
 import heapq
+from functools import total_ordering
 
+@total_ordering
 class Cell(object):
 	def __init__(self, x, y):
 		# f is the heuristic cost
@@ -12,14 +14,16 @@ class Cell(object):
 		self.h = 0
 		self.f = 0
 
-	# Method that is actually called by print()
+	# toString method called by print()
 	def __repr__(self):
-		return self.__str__()
+		return "(" + str(self.x) + ", " + str(self.y) + ")"
 		
-	# toString method
-	def __str__(self):
-		return "(" + str(self.x) + ", " + str(self.y) + ")"		
-		
+	# Comparison methods
+	def __eq(self, other):
+		return (self.f == other.f)
+	def __lt__(self, other):
+		return (self.f < other.f)
+
 class AStar(object):
 	def __init__(self):
 		self.frontier = []		# open list
@@ -28,21 +32,21 @@ class AStar(object):
 		self.grid = []
 		self.grid_height = None
 		self.grid_width = None
-		
+
 	# Set up a new grid
 	def init_grid(self, width, height, obstacles, start, goal):
 		self.grid_height = height
 		self.grid_width = width
-		
+
 		# initialize grid
 		for x in range(self.grid_width):
 			for y in range(self.grid_height):
 				self.grid.append(Cell(x, y))
-		
+
 		# Set up any obstacles
 		for obstacle in obstacles:
 			self.get_cell(obstacle[0], obstacle[1]).reachable = False
-		
+
 		self.start = self.get_cell(*start)
 		self.goal = self.get_cell(*goal)
 
@@ -106,13 +110,14 @@ class AStar(object):
 		while len(self.frontier):
 			# Pop cell from heap queue
 			f, cell = heapq.heappop(self.frontier)
+			print(cell)
 			# Add cell to explored list so we don't process it twice
 			self.explored.add(cell)
-			
+
 			# If ending cell, return found path
 			if cell is self.goal:
 				return self.get_path()
-			
+
 			# Get adjacent cells for cell
 			adj_cells = self.get_adjacent_cells(cell)
 			for adj_cell in adj_cells:
