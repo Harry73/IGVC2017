@@ -27,7 +27,8 @@ class LMS_test(Thread):
 			bytesize = serial.EIGHTBITS,
 			timeout = 1
 		)
-		
+
+		count = 0
 		config = 0
 		while config == 0:
 			response = self.ser.read()
@@ -39,26 +40,26 @@ class LMS_test(Thread):
 				count = 0
 
 			if binascii.hexlify(response) == b'06':
-				time1 = time.time()
 				print('Command Acknowledged')
 
 			if binascii.hexlify(response) == b'02':
 				response = self.ser.read()
 				if binascii.hexlify(response) == b'80':
 					response = self.ser.readline()
-					len = int(binascii.hexlify(response[1]+response[0]), 16)
+					len = "{0:x}".format(response[1]+response[0])
 					print('Length: ' + str(len))
 					#print('Response: ' + binascii.hexlify(response[2]))
 					#print('Status: ' + binascii.hexlify(response[len+1]))
 					#print('Data: ' + binascii.hexlify(response[3:len+1]))
+					response2 = "{0:x}".format(response[2])
 
-					if binascii.hexlify(response[2]) == b'90':
+					if response2 == '90':
 						print('LMS291 Powered On')
 						#self.ser.write(serial.to_bytes([0x02,0x00,0x0A,0x00,0x20,0x00,0x53,0x49,0x43,0x4B,0x5F,0x4C,0x4D,0x53,0xBE,0xC5])) # Settings mode
 						self.ser.write(serial.to_bytes([0x02,0x00,0x05,0x00,0x3B,0xB4,0x00,0x64,0x00,0x97,0x49])) # 180-1 degree variant
 
-					elif binascii.hexlify(response[2]) == b'b1':
-						print('LMS291 Connection Status Verified: ' + response[3:10])
+					elif response2 == 'b1':
+						print('LMS291 Connection Status Verified: ' + str(response[3:10]))
 						#self.ser.write(serial.to_bytes([0x02,0x00,0x0A,0x00,0x20,0x00,0x53,0x49,0x43,0x4B,0x5F,0x4C,0x4D,0x53,0xBE,0xC5])) # Settings mode
 
 						self.ser.write(serial.to_bytes([0x02,0x00,0x05,0x00,0x3B,0xB4,0x00,0x64,0x00,0x97,0x49])) # 180-1 degree variant
@@ -68,24 +69,26 @@ class LMS_test(Thread):
 						#self.ser.write(serial.to_bytes([0x02,0x00,0x05,0x00,0x3B,0x64,0x00,0x32,0x00,0xB1,0x59])) # 100-0.5 degree variant
 						#self.ser.write(serial.to_bytes([0x02,0x00,0x05,0x00,0x3B,0x64,0x00,0x19,0x00,0xE7,0x72])) # 100-0.25 degree variant
 
-					elif binascii.hexlify(response[2]) == b'a0':
+					elif response2 == 'a0':
 						print('LMS291 Installation Mode')
 						#self.ser.write(serial.to_bytes([0x02,0x00,0x02,0x00,0x20,0x40,0x50,0x08])) # Switch to 38,400 Bd
 
-					elif binascii.hexlify(response[2]) == b'bb':
+					elif response2 == 'bb':
 						print('LMS291 Variant Switch')
-						if binascii.hexlify(response[3]) == b'01':
-							print('Switchover successful: ' + str(int(binascii.hexlify(response[4]), 16)) + ' by ' + str(int(binascii.hexlify(response[6]), 16)/100) + ' degrees')
-							self.ang_start = (180-int(binascii.hexlify(response[4]), 16))/2
-							self.ang_inc = int(binascii.hexlify(response[6]), 16)/100
+						if "{0:x}".format(response[3]) == '1':
+							print('Switchover successful: {0:x} by {1:x} degrees'.format(response[4], response[6]))
+							self.ang_start = (180-int(str(response[4]), 16))/2
+							self.ang_inc = int(str(response[6]), 16)/100
 							config = 1	# Setup complete
 						else:
 							print('Switchover failed')
 
 	# Scans based on settings and returns values in an array
 	def scan(self):
+		print("-----------------------")
 		self.ser.write(serial.to_bytes([0x02,0x00,0x02,0x00,0x30,0x01,0x31,0x18])) # Single Scan
 		response = self.ser.read()
+		
 		if binascii.hexlify(response) == b'02':
 			response = self.ser.read()
 			if binascii.hexlify(response) == b'80':
@@ -93,7 +96,7 @@ class LMS_test(Thread):
 				len_high = self.ser.read()
 				len = int(binascii.hexlify(len_high+len_low), 16)
 				response = self.ser.read()
-				print('Response: ' + binascii.hexlify(response))
+				print('Response: ' + str(binascii.hexlify(response)))
 				num_low = self.ser.read()
 				num_high = self.ser.read()
 				if int(binascii.hexlify(num_high), 16) & int('0x40', 16) == 0:
@@ -113,11 +116,9 @@ class LMS_test(Thread):
 					
 				# Finished data transmission, pick up final message
 				status = self.ser.read()
-				print('Status: ' + binascii.hexlify(status))
+				print('Status: ' + str(binascii.hexlify(status)))
 				response = self.ser.readline()
-				print('Checksum: ' + binascii.hexlify(response))
-				time2 = time.time()
-				print(str(time2-time1) + ' seconds')
+				print('Checksum: ' + str(binascii.hexlify(response)))
 
 				return data
 
@@ -132,7 +133,7 @@ class LMS_test(Thread):
 			self.lms_data_stack.append(data)
 			self.lms_s.release()
 			self.lms_n.release()
-		
+
 	def stop(self):
 		self.stopped = True
 				
