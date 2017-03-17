@@ -57,7 +57,7 @@ def run():
 				pygame.draw.rect(WINDOW, RED, (200, 200, 100, 100))
 
 			elif event.type == KEYDOWN and event.key == K_RETURN:
-				start = True
+				start = not start
 
 		# Handle vehicle control
 		if start:
