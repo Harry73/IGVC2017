@@ -84,55 +84,48 @@ class LMS_test(Thread):
 							print('Switchover failed')
 
 	# Scans based on settings and returns values in an array
-	def scan(self):
-		print("-----------------------")
-		self.ser.write(serial.to_bytes([0x02,0x00,0x02,0x00,0x30,0x01,0x31,0x18])) # Single Scan
-		response = self.ser.read()
-		
-		if binascii.hexlify(response) == b'02':
-			response = self.ser.read()
-			if binascii.hexlify(response) == b'80':
-				len_low = self.ser.read()
-				len_high = self.ser.read()
-				len = int(binascii.hexlify(len_high+len_low), 16)
-				response = self.ser.read()
-				print('Response: ' + str(binascii.hexlify(response)))
-				num_low = self.ser.read()
-				num_high = self.ser.read()
-				if int(binascii.hexlify(num_high), 16) & int('0x40', 16) == 0:
-					unit = ' cm '
-				else:
-					unit = ' mm '
-				num = int(binascii.hexlify(num_high+num_low), 16) & int('0x3FFF', 16)
-				print('Number of points: ' + str(num))
-
-				data = [0] * (num+1)	# The actual data read from the LMS
-
-				print("Reading data")
-				for i in range(1, num+1):
-					data_low = self.ser.read()
-					data_high = self.ser.read()
-					data[i] = int(binascii.hexlify(data_high+data_low), 16)
-					
-				# Finished data transmission, pick up final message
-				status = self.ser.read()
-				print('Status: ' + str(binascii.hexlify(status)))
-				response = self.ser.readline()
-				print('Checksum: ' + str(binascii.hexlify(response)))
-
-				return data
-
 	def run(self):
 		# Run until the Driver calls for a stop
 		while not self.stopped:
-			# Get data from LMS
-			data = self.scan()
+			self.ser.write(serial.to_bytes([0x02,0x00,0x02,0x00,0x30,0x01,0x31,0x18])) # Single Scan
+			response = self.ser.read()
+			
+			if binascii.hexlify(response) == b'02':
+				response = self.ser.read()
+				if binascii.hexlify(response) == b'80':
+					len_low = self.ser.read()
+					len_high = self.ser.read()
+					len = int(binascii.hexlify(len_high+len_low), 16)
+					response = self.ser.read()
+					print('Response: ' + str(binascii.hexlify(response)))
+					num_low = self.ser.read()
+					num_high = self.ser.read()
+					if int(binascii.hexlify(num_high), 16) & int('0x40', 16) == 0:
+						unit = ' cm '
+					else:
+						unit = ' mm '
+					num = int(binascii.hexlify(num_high+num_low), 16) & int('0x3FFF', 16)
+					print('Number of points: ' + str(num))
 
-			# Push the data on the stack thread-safely
-			self.lms_s.acquire()
-			self.lms_data_stack.append(data)
-			self.lms_s.release()
-			self.lms_n.release()
+					data = [0] * (num+1)	# The actual data read from the LMS
+
+					print("Reading data")
+					for i in range(1, num+1):
+						data_low = self.ser.read()
+						data_high = self.ser.read()
+						data[i] = int(binascii.hexlify(data_high+data_low), 16)
+						
+					# Finished data transmission, pick up final message
+					status = self.ser.read()
+					print('Status: ' + str(binascii.hexlify(status)))
+					response = self.ser.readline()
+					print('Checksum: ' + str(binascii.hexlify(response)))
+
+					# Push the data on the stack thread-safely
+					self.lms_s.acquire()
+					self.lms_data_stack.append(data)
+					self.lms_s.release()
+					self.lms_n.release()
 
 	def stop(self):
 		self.stopped = True
