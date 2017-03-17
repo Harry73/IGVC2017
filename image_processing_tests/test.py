@@ -78,21 +78,11 @@ def main1():
 	img = cv2.threshold(img, 10, 255, cv2.THRESH_BINARY)[1]
 	show(img, "threshold")
 	
-	lines = cv2.HoughLines(img, 1, np.pi/180, 400)
+	lines = cv2.HoughLinesP(img, 1, np.pi/180, 400, 100, 10)
 		
-	for line in lines:
-		for rho, theta in line:
-			a = np.cos(theta)
-			b = np.sin(theta)
-			x0 = a*rho
-			y0 = b*rho
-			x1 = int(x0 + 1000*(-b))
-			y1 = int(y0 + 1000*(a))
-			x2 = int(x0 - 1000*(-b))
-			y2 = int(y0 - 1000*(a))
-
-			# Draw lines on the original image in red
-			cv2.line(original,(x1,y1),(x2,y2), (0, 0, 255), 2)
+	if lines != None:
+		for x1,y1,x2,y2 in lines[0]:
+			cv2.line(original,(x1,y1),(x2,y2),(0,0,255),2)
 	
 	show(original, "hough")
 	
