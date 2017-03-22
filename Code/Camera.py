@@ -99,12 +99,12 @@ if __name__ == "__main__":
 		int(os.readlink("/dev/IGVC_LEFT_CAMERA")[-1])
 	)
 	
-	lms.start()
+	camera.start()
 	
 	time.sleep(10)
 	
-	lms.stop()
-	lms.join()
+	camera.stop()
+	camera.join()
 	
 	for set in camera_data_stack:
 		print(set)
