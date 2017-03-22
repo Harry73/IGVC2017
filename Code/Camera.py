@@ -84,3 +84,28 @@ class Camera(Thread):
 	# Tell run() to end
 	def stop(self):
 		self.stopped = True
+		
+# Test run
+if __name__ == "__main__":
+	import os
+	from threading import Semaphore
+	
+	camera_data_stack = []
+	camera = Camera(
+		camera_data_stack, 
+		Semaphore(0), 
+		Semaphore(1), 
+		int(os.readlink("/dev/IGVC_RIGHT_CAMERA")[-1]), 
+		int(os.readlink("/dev/IGVC_LEFT_CAMERA")[-1])
+	)
+	
+	lms.start()
+	
+	time.sleep(10)
+	
+	lms.stop()
+	lms.join()
+	
+	for set in camera_data_stack:
+		print(set)
+		print("---------------------------")

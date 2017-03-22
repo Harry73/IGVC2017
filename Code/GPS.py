@@ -68,3 +68,22 @@ class GPS(Thread):
 
 	def stop(self):
 		self.stopped = True
+		
+# Test run
+if __name__ == "__main__":
+	import os
+	from threading import Semaphore
+	
+	gps_coords_stack = []
+	gps = GPS(gps_coords_stack, Semaphore(0), Semaphore(1), "/dev/" + os.readlink("/dev/IGVC_GPS"))
+	
+	gps.start()
+	
+	time.sleep(10)
+	
+	gps.stop()
+	gps.join()
+	
+	for set in gps_coords_stack:
+		print(set)
+		print("---------------------------")

@@ -106,7 +106,7 @@ def get_device_paths():
 	right_camera_index = int(os.readlink("/dev/IGVC_RIGHT_CAMERA")[-1])
 	left_camera_index = int(os.readlink("/dev/IGVC_LEFT_CAMERA")[-1])
 	gps_path = os.readlink("/dev/IGVC_GPS")
-	lidar_path = os.readlink("dev/IGVC_LIDAR")
+	lidar_path = os.readlink("/dev/IGVC_LIDAR")
 
 	# Create dictionary of device to path
 	device_to_path = {}

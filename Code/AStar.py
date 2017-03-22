@@ -15,11 +15,11 @@ class Cell(object):
 	# Method that is actually called by print()
 	def __repr__(self):
 		return self.__str__()
-		
+
 	# toString method
 	def __str__(self):
-		return "(" + str(self.x) + ", " + str(self.y) + ")"		
-		
+		return "(" + str(self.x) + ", " + str(self.y) + ")"
+
 class AStar(object):
 	def __init__(self):
 		self.frontier = []		# open list
@@ -28,21 +28,21 @@ class AStar(object):
 		self.grid = []
 		self.grid_height = None
 		self.grid_width = None
-		
+
 	# Set up a new grid
 	def init_grid(self, width, height, obstacles, start, goal):
 		self.grid_height = height
 		self.grid_width = width
-		
+
 		# initialize grid
 		for x in range(self.grid_width):
 			for y in range(self.grid_height):
 				self.grid.append(Cell(x, y))
-		
+
 		# Set up any obstacles
 		for obstacle in obstacles:
 			self.get_cell(obstacle[0], obstacle[1]).reachable = False
-		
+
 		self.start = self.get_cell(*start)
 		self.goal = self.get_cell(*goal)
 
@@ -108,11 +108,11 @@ class AStar(object):
 			f, cell = heapq.heappop(self.frontier)
 			# Add cell to explored list so we don't process it twice
 			self.explored.add(cell)
-			
+
 			# If ending cell, return found path
 			if cell is self.goal:
 				return self.get_path()
-			
+
 			# Get adjacent cells for cell
 			adj_cells = self.get_adjacent_cells(cell)
 			for adj_cell in adj_cells:
@@ -125,3 +125,31 @@ class AStar(object):
 						self.update_cell(adj_cell, cell)
 						# add adj cell to open list
 						heapq.heappush(self.frontier, (adj_cell.f, adj_cell))
+
+# Test run
+if __name__ == "__main__":
+	map = 3
+	a = AStar()
+	i = 0
+	walls = []
+	
+	# Read file into array
+	with open("Maps/map" + str(map) + ".txt", "r") as f:
+		size = f.readline()
+		for line in f:
+			j = 0
+			for char in line:
+				if char == '#':
+					walls.append((j, i))
+				elif char == 's':
+					start = (j, i)
+				elif char == 'g':
+					goal = (j, i)
+				j += 1
+			i += 1
+
+	size = size.split()
+	a.init_grid(int(size[0]), int(size[1]), walls, start, goal)	# Set up walls
+	#a.set_cell(5, 8, False)
+	path = a.solve()	# Find a path
+	print(path)
