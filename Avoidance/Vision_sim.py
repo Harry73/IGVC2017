@@ -6,8 +6,6 @@ import numpy as np
 import cv2
 from threading import Thread
 
-res = 5
-
 # A simulation of how LiDAR/cameras would hopefully see, using an image
 class Vision():
 
@@ -16,58 +14,103 @@ class Vision():
 		self.img = cv2.imread(img_path)
 		self.height = self.img.shape[0]
 		self.width = self.img.shape[1]
-		
+
+		# The maximum range the 'sensors' can see
+		self.sensor_range = 800
+
+	# Generates a list of pixel locations and values between the two points provided
+	def bresenham_march(self, p1, p2):
+		x1 = p1[0]
+		y1 = p1[1]
+		x2 = p2[0]
+		y2 = p2[1]
+		steep = math.fabs(y2 - y1) > math.fabs(x2 - x1)
+		if steep:
+			t = x1
+			x1 = y1
+			y1 = t
+
+			t = x2
+			x2 = y2
+			y2 = t
+		also_steep = x1 > x2
+		if also_steep:
+
+			t = x1
+			x1 = x2
+			x2 = t
+
+			t = y1
+			y1 = y2
+			y2 = t
+
+		dx = x2 - x1
+		dy = math.fabs(y2 - y1)
+		error = 0.0
+		delta_error = 0.0; # Default if dx is zero
+		if dx != 0:
+			delta_error = math.fabs(dy/dx)
+
+		if y1 < y2:
+			y_step = 1
+		else:
+			y_step = -1
+
+		y = y1
+		ret = list([])
+		for x in range(x1, x2):
+			if steep:
+				p = (y, x)
+			else:
+				p = (x, y)
+
+			(b,r,g) = (-1,)*3
+			if p[0] < self.width and p[1] < self.height and p[0] >= 0 and p[1] >= 0:
+				(b,r,g) = self.img[p[1],p[0]]
+
+				ret.append((p,(b,r,g)))
+
+			error += delta_error
+			if error >= 0.5:
+				y += y_step
+				error -= 1
+
+		if also_steep:
+			ret.reverse()
+
+		return ret
+
 	# Scans and returns values in an array
 	def run(self):
 		data = [0] * (181)
 
 		for i in range(181):
-			angle_deg = (self.direction - 90 + i) % 360
-			print(angle_deg)
-			if angle_deg == 90:
-				self.y = np.arange(0, self.location[1])
-				self.y = self.y[::-1]
-				self.x = np.ones(self.y.shape[0])*self.location[0]
+			angle = (self.direction - 90 + i) % 360
 
-			elif angle_deg == 270:
-				self.y = np.arange(self.location[1], self.height)
-				self.x = np.ones(self.y.shape[0])*self.location[0]
-
-			elif angle_deg < 90:
-				self.x = np.arange(self.location[0]*res, self.width*res)/res
-				m = np.sin(angle_deg*np.pi/180) / np.cos(angle_deg*np.pi/180)
-				self.y = -1 * m * (self.x - self.location[0]) + self.location[1]
-
-			elif angle_deg > 90 and angle_deg <= 180:
-				self.x = np.arange(0, self.location[0]*res)/res
-				self.x = self.x[::-1]
-				m = np.sin((180-angle_deg)*np.pi/180) / np.cos((180-angle_deg)*np.pi/180)
-				self.y = m * (self.x - self.location[0]) + self.location[1]
-
-			elif angle_deg > 180 and angle_deg < 270:
-				self.x = np.arange(0, self.location[0]*res)/res
-				self.x = self.x[::-1]
-				m = np.sin(angle_deg*np.pi/180) / np.cos(angle_deg*np.pi/180)
-				self.y = -1 * m * (self.x - self.location[0]) + self.location[1]
-
-			else:
-				self.x = np.arange(self.location[0]*res, self.width*res)/res
-				m = np.sin((180-angle_deg)*np.pi/180) / np.cos((180-angle_deg)*np.pi/180)
-				self.y = m * (self.x - self.location[0]) + self.location[1]
+			# Get a line iterator for the vision line at 'angle'
+			line = self.bresenham_march(
+				self.location,
+				(int(self.location[0] + self.sensor_range*np.cos(angle*np.pi/180)),
+				int(self.location[1] - self.sensor_range*np.sin(angle*np.pi/180)))
+			)
 
 			# Find first point where vision hits an object
-			for j in range(self.x.shape[0]):
-				if self.y.item(j) < 0 or self.y.item(j) >= self.height:
+			for point, value in line:
+				if point[1] < 0 or point[1] >= self.height:
+					print("hi")
 					break
-				if np.all(self.img[int(self.y.item(j)), int(self.x.item(j)), :] > 200):
+				if np.all(np.array(value) > 100):
 					break
-				#self.img[int(self.y.item(j)), int(self.x.item(j)), :] = np.array([0,0,255])	# Draw vision lines in red
+
+				# Draw vision lines in red
+				#self.img[point[1], point[0]] = np.array([0,0,255])
 
 			# Record distance to nearest object
-			data[i] = math.sqrt(math.pow(self.location[0]-self.x.item(j), 2) + math.pow(self.location[1]-self.y.item(j), 2))
-			
-			cv2.circle(self.img, (int(self.x.item(j)), int(self.y.item(j))), 5, (0, 0, 255), thickness=1)	# Draw vision results
-			
+			data[i] = math.sqrt(math.pow(self.location[0]-point[0], 2) + math.pow(self.location[1]-point[1], 2))
+
+			# Draw vision endpoints
+			cv2.circle(self.img, (point[0], point[1]), 5, (0, 0, 255), thickness=1)
+
 		# Return the vision
 		return np.array(data)
 
@@ -79,11 +122,11 @@ class Vision():
 
 # Test run
 if __name__ == "__main__":
-	vis = Vision("Field.png")
+	vis = Vision("Field1.png")
+	vis.setLocation((600, 580))
+	vis.setDirection(90)
 	data = vis.run()
 	cv2.circle(vis.img, (int(vis.location[0]), int(vis.location[1])), 10, (255, 255, 0), thickness=2)	# Draw agent
-	for set in data:
-		cv2.circle(vis.img, (int(set[0]), int(set[1])), 5, (0, 0, 255), thickness=1)	# Draw vision results
 	cv2.imshow("blah", vis.img)
 	cv2.waitKey(0)
 	cv2.destroyAllWindows()

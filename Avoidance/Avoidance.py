@@ -5,7 +5,7 @@ import cv2
 from threading import Thread
 from Vision_sim import Vision
 
-file = "Field3.png"
+file = "Field1.png"
 
 def main():
 	location = (600, 580)		# initial position (bottom center)
@@ -13,16 +13,16 @@ def main():
 	direction = 90				# initial direction (up)
 	buffer_distance = 50		# space to keep between agent and obstacles
 	width = 50					# width of agent
-	width += buffer_distance	
+	width += buffer_distance
 	R = 100						# maximum distance to consider
 	scale = 0.5					# Percentage of R to actually move
-		
+
 	while True:
 		vis = Vision(file)
 		vis.setLocation(location)
 		vis.setDirection(direction)
 		r = vis.run()
-		
+
 		cv2.circle(vis.img, (int(location[0]), int(location[1])), int((width-buffer_distance)/2), (255, 255, 0), thickness=2)	# Draw agent
 		cv2.circle(vis.img, (int(location[0]), int(location[1])), R, (255, 0, 0), thickness=1)	# Draw max range of consideration
 		cv2.circle(vis.img, goal, 10, (0, 255, 0), thickness=2)	# Draw goal
@@ -36,7 +36,7 @@ def main():
 				theta_range_needed = 180/np.pi*2*math.asin(width/(2*rgn))
 				if (np.any(r[math.floor(i-theta_range_needed/2):math.ceil(i+theta_range_needed/2)] < rgn)):
 					viable = False
-					
+
 			if viable:
 				viable_angles.append(theta)
 
@@ -44,11 +44,9 @@ def main():
 		min_index = 0
 		min_distance = 10000000
 		for i, angle in enumerate(viable_angles):
-			print("Viable angle: {0}".format(angle))
+			# Simulate moving forward R movement at the current angle and calculate distance to goal
 			x = location[0] + scale*R*np.cos(angle*np.pi/180)
 			y = location[1] - scale*R*np.sin(angle*np.pi/180)
-
-			# Simulate moving forward R movement at the current angle and calculate distance to goal
 			sim_distance = math.sqrt(math.pow(x-goal[0], 2) + math.pow(y-goal[1], 2))
 			if sim_distance < min_distance:		# Keep the minimum distance to find the most efficient angle
 				min_distance = sim_distance
@@ -59,11 +57,11 @@ def main():
 		print("Best angle: {0}".format(viable_angles[min_index]))
 		location = min_location
 		direction = viable_angles[min_index]
-				
-		cv2.destroyAllWindows()
-		cv2.imshow("blah", vis.img)
+
+		cv2.imshow("Field", vis.img)
 		k = cv2.waitKey(0)
 		if k == ord('q'):
+			cv2.destroyAllWindows()
 			break
 
 if __name__ == "__main__":
