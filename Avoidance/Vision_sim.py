@@ -1,22 +1,19 @@
-
-
+import cv2
 import time
 import math
 import numpy as np
-import cv2
-from threading import Thread
 
 # A simulation of how LiDAR/cameras would hopefully see, using an image
 class Vision():
 
 	def __init__(self, img_path):
 		# Open image
-		self.img = cv2.imread(img_path)
-		self.height = self.img.shape[0]
-		self.width = self.img.shape[1]
-
-		# The maximum range the 'sensors' can see
-		self.sensor_range = 800
+		self.original = cv2.imread(img_path)
+		self.height = self.original.shape[0]
+		self.width = self.original.shape[1]
+		
+		self.sensor_range = 800	# The maximum range the 'sensors' can see
+		self.data = [0] * (181)	# The sensor data
 
 	# Generates a list of pixel locations and values between the two points provided
 	def bresenham_march(self, p1, p2):
@@ -82,7 +79,7 @@ class Vision():
 
 	# Scans and returns values in an array
 	def run(self):
-		data = [0] * (181)
+		self.img = self.original.copy()
 
 		for i in range(181):
 			angle = (self.direction - 90 + i) % 360
@@ -103,16 +100,16 @@ class Vision():
 					break
 
 				# Draw vision lines in red
-				#self.img[point[1], point[0]] = np.array([0,0,255])
+				self.img[point[1], point[0]] = np.array([0,0,255])
 
 			# Record distance to nearest object
-			data[i] = math.sqrt(math.pow(self.location[0]-point[0], 2) + math.pow(self.location[1]-point[1], 2))
+			self.data[i] = math.sqrt(math.pow(self.location[0]-point[0], 2) + math.pow(self.location[1]-point[1], 2))
 
 			# Draw vision endpoints
 			cv2.circle(self.img, (point[0], point[1]), 5, (0, 0, 255), thickness=1)
 
 		# Return the vision
-		return np.array(data)
+		return np.array(self.data)
 
 	def setLocation(self, new_location):
 		self.location = new_location
