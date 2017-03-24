@@ -5,16 +5,17 @@ import cv2
 from threading import Thread
 from Vision_sim import Vision
 
-file = "Field.png"
+file = "Field3.png"
 
 def main():
-	location = (600, 580)	# initial position (bottom center)
-	goal = (600, 20)		# goal
-	direction = 90			# initial direction (up)
-	width = 100				# width of agent
-	R = 100					# distance to consider
-	theta_range_needed = 180/np.pi*2*math.asin(width/(2*R))
-	scale = 0.5				# Percentage of R to actually move
+	location = (600, 580)		# initial position (bottom center)
+	goal = (600, 80)			# goal
+	direction = 90				# initial direction (up)
+	buffer_distance = 50		# space to keep between agent and obstacles
+	width = 50					# width of agent
+	width += buffer_distance	
+	R = 100						# maximum distance to consider
+	scale = 0.5					# Percentage of R to actually move
 		
 	while True:
 		vis = Vision(file)
@@ -22,15 +23,21 @@ def main():
 		vis.setDirection(direction)
 		r = vis.run()
 		
-		cv2.circle(vis.img, (int(location[0]), int(location[1])), 20, (255, 255, 0), thickness=2)	# Draw agent
-		cv2.circle(vis.img, (int(location[0]), int(location[1])), R, (255, 0, 0), thickness=1)	# Draw arc of consideration
+		cv2.circle(vis.img, (int(location[0]), int(location[1])), int((width-buffer_distance)/2), (255, 255, 0), thickness=2)	# Draw agent
+		cv2.circle(vis.img, (int(location[0]), int(location[1])), R, (255, 0, 0), thickness=1)	# Draw max range of consideration
 		cv2.circle(vis.img, goal, 10, (0, 255, 0), thickness=2)	# Draw goal
 
 		viable_angles = []
 		# Pick a direction to move
-		for i in range(0,156):
+		for i in range(25,156):
 			theta = (direction - 90 + i) % 360
-			if (np.all(r[math.floor(i-theta_range_needed/2):math.ceil(i+theta_range_needed/2)] > R)):
+			viable = True
+			for rgn in range(math.ceil(width/2), R+10, 10):
+				theta_range_needed = 180/np.pi*2*math.asin(width/(2*rgn))
+				if (np.any(r[math.floor(i-theta_range_needed/2):math.ceil(i+theta_range_needed/2)] < rgn)):
+					viable = False
+					
+			if viable:
 				viable_angles.append(theta)
 
 		# Determine which viable angle will move you towards goal the fastest
