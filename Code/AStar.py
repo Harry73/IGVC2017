@@ -1,3 +1,13 @@
+"""
+File: AStar.py
+
+Description: A* Search Algorithm
+	Implementation of a search framework and the A* search algorithm
+
+	Sets up a grid based on a list of walls. Runs the A* algorithm
+	to chart a path from a starting point to a goal point.
+"""
+
 import math
 import heapq
 
