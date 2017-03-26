@@ -1,3 +1,17 @@
+"""
+File: Vision_sim.py
+
+Description: Sensor Simulation
+	Simulates the data LiDAR and cameras would ideally produce
+
+	White lines are represented as physical obstacles. The Bresenham March 
+	algorithm is used to generate a list of data points for lines in every 
+	direction from 0 to 180 degrees. This simulates the LiDAR's vision. 
+	Each line is searched through until an obstacle is hit or the line ends. 
+	The (x, y) coordinates are converted to (r, theta) and returned to mimic 
+	the LiDAR's actual output. 
+"""
+
 import cv2
 import time
 import math
@@ -93,9 +107,6 @@ class Vision():
 
 			# Find first point where vision hits an object
 			for point, value in line:
-				if point[1] < 0 or point[1] >= self.height:
-					print("hi")
-					break
 				if np.all(np.array(value) > 100):
 					break
 
