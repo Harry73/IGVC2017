@@ -20,7 +20,7 @@ class LMS(Thread):
 
 	def __init__(self, lms_data_stack, lms_n, lms_s, device_path):
 		# Call Thread initializer
-		super(LMS_test, self).__init__()
+		super(LMS, self).__init__()
 
 		# Get IGVC logger
 		self.logger = logging.getLogger("IGVC")
