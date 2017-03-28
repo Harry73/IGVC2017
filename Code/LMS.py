@@ -108,7 +108,6 @@ class LMS(Thread):
 
 					data = [0] * (num+1)	# The actual data read from the LMS
 
-					print('LiDAR reading data')
 					for i in range(1, num+1):
 						data_low = self.ser.read()
 						data_high = self.ser.read()
