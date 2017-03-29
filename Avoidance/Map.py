@@ -27,6 +27,7 @@ class Map():
 		self.yscale = size
 		self.grid_dim = (int(self.width/self.xscale), int(self.height/self.yscale))
 		self.map = np.zeros(self.grid_dim, np.uint8)
+		self.last_data_set = []
 
 	# Save points the sensors have seen
 	def record(self, r, current_location, current_direction):
@@ -38,7 +39,8 @@ class Map():
 			y = current_location[1] - (r[i])*np.sin(angle*np.pi/180)
 			cv2.circle(self.img, (int(x), int(y)), 5, (0, 0, 255), thickness=1)
 
-			if x < 0:	# Fix when cos and sin run past image limits
+			# Fix when cos and sin run past image limits
+			if x < 0:
 				x = 0
 			if y < 0:
 				y = 0
@@ -49,6 +51,8 @@ class Map():
 
 			# Increase likelihood that grid tile has an obstacle
 			self.map[math.floor(x/self.xscale), math.floor(y/self.yscale)] += 1
+			
+		self.last_data_set = r
 
 	def draw_map(self):
 		# Vertical lines

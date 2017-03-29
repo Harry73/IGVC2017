@@ -39,9 +39,6 @@ def avoid():
 		vis.setLocation(location)
 		vis.setDirection(direction)
 		r = vis.run()
-
-		# Record the resulting data
-		map.record(r, location, direction)
 	
 		cv2.circle(vis.img, (int(location[0]), int(location[1])), int(width/2), (255, 255, 0), thickness=2)	# Draw agent
 		cv2.circle(vis.img, (int(location[0]), int(location[1])), R, (255, 0, 0), thickness=1)	# Draw max range of consideration
@@ -52,14 +49,21 @@ def avoid():
 		for i in range(25, 156):	# Angles beyond this range lack the vision needed to make safe decisions
 			theta = (direction - 90 + i) % 360
 			viable = True
-			for rgn in range(math.ceil(buff_width/2), R+10, 10):
+			for rgn in range(math.ceil(buff_width/2), R+10, 5):
+				# Calculate theta range and limits to search for obstacles in range rgn
 				theta_range_needed = 180/np.pi*2*math.asin(buff_width/(2*rgn))
-				low_lim = math.floor(i-theta_range_needed/2)
-				high_lim = math.ceil(i+theta_range_needed/2)
+				low_lim = math.floor(i-theta_range_needed/2) % 360
+				high_lim = math.ceil(i+theta_range_needed/2) % 360
+				
+				# Check if the path around theta is clear
+				if low_lim > high_lim:	# Handle the roll over case made possible by "% 360"
+					if (np.any(np.concatenate((r[high_lim:359], r[0:low_lim]))) < rgn):
+						viable = False
+				else:
+					if (np.any(r[low_lim:high_lim] < rgn)):
+						viable = False
 
-				if (np.any(r[low_lim:high_lim] < rgn)):
-					viable = False
-
+			# Save viable angles for further inspection later
 			if viable:
 				viable_angles.append(theta)
 
@@ -90,8 +94,9 @@ def avoid():
 
 		cv2.arrowedLine(vis.img, location, min_location, (0,255,255), thickness=2)	# Draw direction of next movement
 		print("Best angle: {0}".format(viable_angles[min_index]))
-		location = min_location
-		direction = viable_angles[min_index]
+
+		# Record the resulting data
+		map.record(r, location, direction)
 
 		# Show the image
 		cv2.imshow("Field", vis.img)
@@ -100,6 +105,11 @@ def avoid():
 			cv2.destroyAllWindows()
 			break
 
+		# Update location and direction
+		location = min_location
+		direction = viable_angles[min_index]
+
+	# When simulation is complete, show the recorded map
 	map.draw_map()
 	cv2.imshow("Map", map.img)
 	k = cv2.waitKey(0)
