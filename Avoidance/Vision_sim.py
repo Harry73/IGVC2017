@@ -111,13 +111,13 @@ class Vision():
 					break
 
 				# Draw vision lines in red
-				self.img[point[1], point[0]] = np.array([0,0,255])
+				#self.img[point[1], point[0]] = np.array([0,0,255])
 
 			# Record distance to nearest object
 			self.data[i] = math.sqrt(math.pow(self.location[0]-point[0], 2) + math.pow(self.location[1]-point[1], 2))
 
 			# Draw vision endpoints
-			cv2.circle(self.img, (point[0], point[1]), 5, (0, 0, 255), thickness=1)
+			#cv2.circle(self.img, (point[0], point[1]), 5, (0, 0, 255), thickness=1)
 
 		# Return the vision
 		return np.array(self.data)

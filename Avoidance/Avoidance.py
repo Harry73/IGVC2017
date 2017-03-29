@@ -24,10 +24,13 @@ def avoid():
 	location = (600, 580)		# Initial position (bottom center)
 	goal = (600, 80)			# Goal
 	direction = 90				# Initial direction (up)
-	buffer_distance = 50		# Space to keep between agent and obstacles
 	width = 50					# Width of agent
+	
+	MAX_BUFF = 50
+	buffer_distance = MAX_BUFF	# Space to keep between agent and obstacles
 	buff_width = width + buffer_distance
-	MAX_R = 200					# Maximum distance to consider
+	
+	MAX_R = 100					# Maximum distance to consider
 	R = MAX_R					# Maximum distance to consider for a iteration
 	move_scale = 0.25			# Percentage of R to actually move
 	
@@ -95,18 +98,25 @@ def avoid():
 			if viable:
 				viable_angles.append(theta)
 
-		# If there are no viable angles, decrease R and try again, up until a point
+		# If there are no viable angles, try adjusting parameters
 		if len(viable_angles) == 0:
-			if R < buff_width:
-				print("Help, I'm stuck and too stupid to get out!")
-				break
-			else:
+			if R > buff_width/2:	# Try decreasing R first
 				print("No viable angles, decreasing R")
 				R = int(R*0.9)
 				continue
+			elif buff_width > 5:	# Try decreasing the distance buffer second
+				print("No viable angles, decreasing distance buffer")
+				buffer_distance = int(buffer_distance*0.9)
+				buff_width = width + buffer_distance
+				continue
+			else:	# Stuck situation -> should turn around or back up
+				print("Help, I'm stuck and too stupid to get out!")
+				break
 		else:
 			R = MAX_R
-		
+			buffer_distance = MAX_BUFF
+			buff_width = width + buffer_distance
+			
 		# Determine which viable angle will move you towards goal the fastest
 		min_index = 0
 		min_distance = 10000000
@@ -127,7 +137,7 @@ def avoid():
 
 		# Record the resulting data
 		map.record(data, location, direction)
-
+		
 		# Show the image
 		cv2.imshow("Field", vis.img)
 		k = cv2.waitKey(0)
