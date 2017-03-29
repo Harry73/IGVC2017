@@ -13,7 +13,6 @@ Description: Obstacle Avoidance Algorithm
 """
 
 import cv2
-import time
 import math
 import numpy as np
 from Map import Map
@@ -22,31 +21,58 @@ from Vision_sim import Vision
 file = "Field4.png"
 
 def avoid():
-	location = (600, 580)		# initial position (bottom center)
-	goal = (600, 80)			# goal
-	direction = 90				# initial direction (up)
-	buffer_distance = 50		# space to keep between agent and obstacles
-	width = 50					# width of agent
+	location = (600, 580)		# Initial position (bottom center)
+	goal = (600, 80)			# Goal
+	direction = 90				# Initial direction (up)
+	buffer_distance = 50		# Space to keep between agent and obstacles
+	width = 50					# Width of agent
 	buff_width = width + buffer_distance
-	R = 200						# maximum distance to consider
+	MAX_R = 200					# Maximum distance to consider
+	R = MAX_R					# Maximum distance to consider for a iteration
 	move_scale = 0.25			# Percentage of R to actually move
-
+	
 	vis = Vision(file)
 	map = Map(vis.width, vis.height, width)
 
 	while True:
+		data = 50000*np.ones(360)
 		# Update location and run the sensor simulation
 		vis.setLocation(location)
 		vis.setDirection(direction)
-		r = vis.run()
+		data[0:181] = vis.run()
 	
 		cv2.circle(vis.img, (int(location[0]), int(location[1])), int(width/2), (255, 255, 0), thickness=2)	# Draw agent
 		cv2.circle(vis.img, (int(location[0]), int(location[1])), R, (255, 0, 0), thickness=1)	# Draw max range of consideration
 		cv2.circle(vis.img, goal, 10, (0, 255, 0), thickness=2)	# Draw goal
 
+		# Add in past 2 data sets from sensors
+		for sample in map.last_data_set:
+			r = math.sqrt(math.pow(location[0]-sample[0], 2) + math.pow(location[1]-sample[1], 2))
+			theta = math.atan2(location[1]-sample[1], location[0]-sample[0])
+			theta = np.pi - theta	# Needed because y coordinates are upside down
+			theta = (theta*180/np.pi - (direction-90))	# Find relative angle from absolute
+			theta = theta % 360
+			
+			# Only modify unknown region around agent
+			if theta > 180:
+				angle = int(theta)
+				if r < data[angle]:
+					data[angle] = r
+					
+		# Draw the vision + recent memory
+		for i, r in enumerate(data):
+			theta = (direction - 90 + i) % 360
+			x = location[0] + (r)*np.cos(theta*np.pi/180)
+			y = location[1] - (r)*np.sin(theta*np.pi/180)
+			if x >= 0 and x < vis.width and y >= 0 and y < vis.height:
+				if i <= 180:
+					cv2.circle(vis.img, (int(x), int(y)), 5, (0, 0, 255))
+				else:
+					cv2.circle(vis.img, (int(x), int(y)), 5, (0, 255, 255))
+		
 		# Pick a direction to move
 		viable_angles = []
-		for i in range(25, 156):	# Angles beyond this range lack the vision needed to make safe decisions
+		for i in range(25, 156):
 			theta = (direction - 90 + i) % 360
 			viable = True
 			for rgn in range(math.ceil(buff_width/2), R+10, 5):
@@ -56,12 +82,14 @@ def avoid():
 				high_lim = math.ceil(i+theta_range_needed/2) % 360
 				
 				# Check if the path around theta is clear
-				if low_lim > high_lim:	# Handle the roll over case made possible by "% 360"
-					if (np.any(np.concatenate((r[high_lim:359], r[0:low_lim]))) < rgn):
+				if low_lim > high_lim:	# Handle the roll over case made possible by "% 360" 
+					if np.any(np.concatenate((data[low_lim:], data[0:high_lim])) < rgn):
 						viable = False
+						break
 				else:
-					if (np.any(r[low_lim:high_lim] < rgn)):
+					if (np.any(data[low_lim:high_lim] < rgn)):
 						viable = False
+						break
 
 			# Save viable angles for further inspection later
 			if viable:
@@ -76,6 +104,8 @@ def avoid():
 				print("No viable angles, decreasing R")
 				R = int(R*0.9)
 				continue
+		else:
+			R = MAX_R
 		
 		# Determine which viable angle will move you towards goal the fastest
 		min_index = 0
@@ -96,7 +126,7 @@ def avoid():
 		print("Best angle: {0}".format(viable_angles[min_index]))
 
 		# Record the resulting data
-		map.record(r, location, direction)
+		map.record(data, location, direction)
 
 		# Show the image
 		cv2.imshow("Field", vis.img)
