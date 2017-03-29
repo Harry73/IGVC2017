@@ -31,12 +31,14 @@ class Map():
 
 	# Save points the sensors have seen
 	def record(self, r, current_location, current_direction):
+		positions = []
 		for i in range(181):
 			angle = (current_direction - 90 + i) % 360
 
 			# Draw obstacle points seen
 			x = current_location[0] + (r[i])*np.cos(angle*np.pi/180)
 			y = current_location[1] - (r[i])*np.sin(angle*np.pi/180)
+			positions.append((x, y))
 			cv2.circle(self.img, (int(x), int(y)), 5, (0, 0, 255), thickness=1)
 
 			# Fix when cos and sin run past image limits
@@ -52,7 +54,7 @@ class Map():
 			# Increase likelihood that grid tile has an obstacle
 			self.map[math.floor(x/self.xscale), math.floor(y/self.yscale)] += 1
 			
-		self.last_data_set = r
+		self.last_data_set = positions
 
 	def draw_map(self):
 		# Vertical lines
