@@ -25,7 +25,7 @@ class Servo(Thread):
 				wpi.digitalWrite(self.pin, 1)
 				wpi.delayMicroseconds(self.pulse)
 				wpi.digitalWrite(self.pin, 0)
-				wpi.delayMicroseconds(frequency - pulse)
+				wpi.delayMicroseconds(self.frequency - self.pulse)
 			else:
 				break
 
