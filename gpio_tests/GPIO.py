@@ -4,11 +4,11 @@ from threading import Thread
 
 class Servo(Thread):
 
-	def __init__(self):
+	def __init__(self, servo_pin):
 		super(Servo, self).__init__()
 		wpi.wiringPiSetup()
 
-		self.pin = 21
+		self.pin = servo_pin
 		wpi.pinMode(self.pin, 1)
 		wpi.digitalWrite(self.pin, 0)
 
@@ -39,3 +39,19 @@ class Servo(Thread):
 	def end(self):
 		self.stopped = -1
 		
+# Helper functions for wiringpi2
+def setup(pins):
+	wpi.wiringPiSetup()
+	for pin in pins:
+		wpi.pinMode(pin, 1)
+		
+def write(pin):
+	wpi.digitalWrite(pin, 1)
+	
+def clear(pin):
+	wpi.digitalWrite(pin, 0)
+	
+def signal(pin, time):
+	wpi.digitalWrite(pin, 1)
+	wpi.delayMicroseconds(time)
+	wpi.digitalWrite(pin, 0)
