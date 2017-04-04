@@ -41,7 +41,6 @@ class Motors(Thread):
 
 	# Send a single pulse signal to the drive motor
 	def drive(self, drive_pulse):
-		pass
 		wpi.digitalWrite(self.drive_pin, 1)
 		wpi.delayMicroseconds(drive_pulse)
 		wpi.digitalWrite(self.drive_pin, 0)
