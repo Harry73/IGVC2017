@@ -43,7 +43,7 @@ class Motors(Thread):
 	def drive(self, drive_pulse):
 		pass
 		wpi.digitalWrite(self.drive_pin, 1)
-		wpi.delayMicroseconds(self.drive_pulse)
+		wpi.delayMicroseconds(drive_pulse)
 		wpi.digitalWrite(self.drive_pin, 0)
 		
 	def restart(self):
