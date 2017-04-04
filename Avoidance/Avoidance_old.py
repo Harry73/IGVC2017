@@ -15,7 +15,7 @@ Description: Obstacle Avoidance Algorithm
 import cv2
 import math
 import numpy as np
-from Map import Map
+from Map_old import Map
 from Vision_sim import Vision
 
 file = "Field1.png"
