@@ -36,8 +36,13 @@ def run():
 	while True:
 		# Handle events
 		for event in pygame.event.get():
+			WINDOW.fill(GREEN)
+			pygame.draw.rect(WINDOW, YELLOW, (0, 200, 500, 100))
+			pygame.draw.rect(WINDOW, YELLOW, (200, 0, 100, 500))
+			pygame.draw.rect(WINDOW, RED, (200, 200, 100, 100))
+
 			# Quit conditions
-			if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
+			if event.type == QUIT or (event.type == KEYDOWN and (event.key == K_ESCAPE or event.key == K_q)):
 				motors.terminate()
 				pygame.quit()
 				sys.exit()
@@ -45,11 +50,20 @@ def run():
 			# Draw a background guide
 			elif event.type == MOUSEMOTION:
 				mouseX, mouseY = event.pos
-
-				WINDOW.fill(GREEN)
-				pygame.draw.rect(WINDOW, YELLOW, (0, 200, 500, 100))
-				pygame.draw.rect(WINDOW, YELLOW, (200, 0, 100, 500))
-				pygame.draw.rect(WINDOW, RED, (200, 200, 100, 100))
+				
+			elif event.type == MOUSEBUTTONDOWN:
+				mouseX, mouseY = event.pos
+				if mouseX >= 200 and mouseX <= 300:		# no turn
+					motors.turn(1000)
+					value2 = "no turn"
+				elif mouseX < 200:						# left
+					pulse = int(-5/2*mouseX+1500)
+					motors.turn(pulse)
+					value2 = str(pulse)
+				elif mouseX > 300:						# right
+					pulse = int(-5/2*mouseX+1750)
+					motors.turn(pulse)
+					value2 = str(pulse)
 
 			# Toggle starting and stopping the control
 			elif event.type == KEYDOWN and event.key == K_RETURN:
@@ -73,18 +87,6 @@ def run():
 				pulse = int(8/5*mouseY+920)
 				motors.drive(pulse)
 				value1 = str(pulse)
-
-			if mouseX >= 200 and mouseX <= 300:		# no turn
-				motors.turn(1000)
-				value2 = "no turn"
-			elif mouseX < 200:						# left
-				pulse = int(-5/2*mouseX+1500)
-				motors.turn(pulse)
-				value2 = str(pulse)
-			elif mouseX > 300:						# right
-				pulse = int(-5/2*mouseX+1750)
-				motors.turn(pulse)
-				value2 = str(pulse)
 
 			label = FONT.render("{0}, {1}".format(value1, value2), 1, BLACK)
 			WINDOW.blit(label, (400, 10))
