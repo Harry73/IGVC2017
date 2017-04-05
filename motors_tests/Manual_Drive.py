@@ -3,6 +3,7 @@
 # CHECK IF wpi.delayMicroseconds is a blocking function. I think it is, but it's a problem if it is not.
 
 import sys
+import time
 import pygame
 from pygame.locals import *
 from Motors import Motors
@@ -26,6 +27,7 @@ def main():
 	# Motors setup
 	motors = Motors()
 	motors.start()
+	motors.restart()
 
 	run()
 
@@ -33,7 +35,7 @@ def run():
 	start = False
 	value1 = "hi"
 	value2 = "hi"
-
+	
 	# Main "game" loop
 	while True:
 		# Handle events
@@ -92,6 +94,7 @@ def run():
 
 		# Redraw window
 		pygame.display.update()
+		time.sleep(0.1)
 
 if __name__ == "__main__":
 	main()
