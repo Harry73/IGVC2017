@@ -15,6 +15,7 @@ from GPS import GPS
 from LMS import LMS
 from Camera import Camera
 from Compass import Compass
+from Sensors import Sensors
 from threading import Thread, Semaphore
 
 IGVC_HOME = "/home/odroid/IGVC2017"
@@ -62,6 +63,14 @@ def main():
 	compass_s = Semaphore(1)
 	compass = Compass(compass_stack, compass_n, compass_s)
 	logger.debug("Compass setup complete")
+
+	# Wrap all the sensors' stacks and semaphores into 1 object
+	sensors = Sensors(
+		gps_coords_stack, gps_n, gps_s,
+		lms_data_stack, lms_n, lms_s,
+		camera_lines_stack, camera_n, camera_s,
+		compass_stack, compass_n, compass_s
+	)
 
 	# Start the threads
 	logger.debug("Setup complete")

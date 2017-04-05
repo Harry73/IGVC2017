@@ -1,20 +1,13 @@
-"""
-File: AStar.py
-
-Description: A* Search Algorithm
-	Implementation of a search framework and the A* search algorithm
-
-	Sets up a grid based on a list of walls. Runs the A* algorithm
-	to chart a path from a starting point to a goal point.
-"""
-
 import math
 import heapq
+import numpy as np
+from functools import total_ordering
 
+@total_ordering
 class Cell(object):
 	def __init__(self, x, y):
 		# f is the heuristic cost
-		self.reachable = True
+		self.points = 0
 		self.x = x
 		self.y = y
 		self.parent = None
@@ -22,41 +15,71 @@ class Cell(object):
 		self.h = 0
 		self.f = 0
 
-	# Method that is actually called by print()
+	# toString method called by print()
 	def __repr__(self):
-		return self.__str__()
-
-	# toString method
-	def __str__(self):
 		return "(" + str(self.x) + ", " + str(self.y) + ")"
+		
+	# Comparison methods
+	def __eq(self, other):
+		return (self.f == other.f)
+	def __lt__(self, other):
+		return (self.f < other.f)
 
 class AStar(object):
-	def __init__(self):
+	def __init__(self, map_width, map_height, vehicle_size):
+		self.map_width = map_width
+		self.map_height = map_height
+		self.xscale = vehicle_size
+		self.yscale = vehicle_size
+
+		self.grid_width = int(self.map_width/self.xscale)
+		self.grid_height = int(self.map_height/self.yscale)
 		self.frontier = []		# open list
 		heapq.heapify(self.frontier)
 		self.explored = set()	# explored list
 		self.grid = []
-		self.grid_height = None
-		self.grid_width = None
-
-	# Set up a new grid
-	def init_grid(self, width, height, obstacles, start, goal):
-		self.grid_height = height
-		self.grid_width = width
+		self.threshold = 1
+		
+		self.last_data_set = []
 
 		# initialize grid
 		for x in range(self.grid_width):
 			for y in range(self.grid_height):
 				self.grid.append(Cell(x, y))
 
-		# Set up any obstacles
-		for obstacle in obstacles:
-			self.get_cell(obstacle[0], obstacle[1]).reachable = False
+	# Save points the sensors have seen
+	def record_data(self, r, current_location, current_direction):
+		positions = []
+		for i in range(181):
+			angle = (current_direction - 90 + i) % 360
 
+			# Draw obstacle points seen
+			x = current_location[0] + (r[i])*np.cos(angle*np.pi/180)
+			y = current_location[1] - (r[i])*np.sin(angle*np.pi/180)
+			positions.append((x, y))
+
+			# Fix when cos and sin run past image limits
+			if x < 0:
+				x = 0
+			if y < 0:
+				y = 0
+			if x > self.map_width:
+				x = self.map_width-1
+			if y > self.map_height:
+				y = self.map_height-1
+
+			# Increase likelihood that grid tile has an obstacle
+			self.get_cell(math.floor(x/self.xscale), math.floor(y/self.yscale)).points += 1
+			
+		self.last_data_set = positions	
+			
+	def set_start(self, start):
 		self.start = self.get_cell(*start)
+		
+	def set_goal(self, goal):
 		self.goal = self.get_cell(*goal)
-
-	# Calculate heuristic value of cell (manhattan distance)
+			
+	# Calculate heuristic value of cell (manhattan distance), slightly greedy
 	def get_heuristic(self, cell):
 		return 6*(abs(cell.x - self.goal.x) + abs(cell.y - self.goal.y))
 
@@ -126,7 +149,7 @@ class AStar(object):
 			# Get adjacent cells for cell
 			adj_cells = self.get_adjacent_cells(cell)
 			for adj_cell in adj_cells:
-				if adj_cell.reachable and adj_cell not in self.explored:
+				if adj_cell.points < self.threshold and adj_cell not in self.explored:
 					if (adj_cell.f, adj_cell) in self.frontier:
 						# If adj cell in open list, check if current path is better than the one previously found for this adj cell
 						if adj_cell.g > cell.g + 5:
@@ -135,31 +158,24 @@ class AStar(object):
 						self.update_cell(adj_cell, cell)
 						# add adj cell to open list
 						heapq.heappush(self.frontier, (adj_cell.f, adj_cell))
+						
+		if self.threshold < 50:
+			self.threshold += 5
+			return self.solve()
 
 # Test run
 if __name__ == "__main__":
-	map = 3
-	a = AStar()
-	i = 0
-	walls = []
+	a = AStar(3048, 6096, 89)
+	a.set_start((1, 1))
+	a.set_goal((10, 10))
 	
-	# Read file into array
-	with open("Maps/map" + str(map) + ".txt", "r") as f:
-		size = f.readline()
-		for line in f:
-			j = 0
-			for char in line:
-				if char == '#':
-					walls.append((j, i))
-				elif char == 's':
-					start = (j, i)
-				elif char == 'g':
-					goal = (j, i)
-				j += 1
-			i += 1
-
-	size = size.split()
-	a.init_grid(int(size[0]), int(size[1]), walls, start, goal)	# Set up walls
-	#a.set_cell(5, 8, False)
+	# Trap robot with walls
+	a.get_cell(1, 2).points += 5
+	a.get_cell(2, 1).points += 5
+	a.get_cell(2, 2).points += 5
+	a.get_cell(2, 0).points += 5
+	a.get_cell(0, 2).points += 5
+	
 	path = a.solve()	# Find a path
 	print(path)
+	print(a.threshold)
