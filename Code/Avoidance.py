@@ -19,9 +19,12 @@ import math
 import numpy as np
 from AStar import AStar
 from Motors import Motors
+from threading import Thread
 
-class Avoidance():
+class Avoidance(Thread):
 	def __init__(self, sensors):
+		super(Avoidance, self).__init__()
+
 		self.sensors = sensors
 		self.motors = Motors()
 		self.motors.start()
@@ -31,7 +34,9 @@ class Avoidance():
 		self.direction = 90			# Intial direction, foward (degrees)
 		self.goal = (600, 80)		# Target to reach
 
-	def avoid(self):
+		self.stopped = False
+
+	def run(self):
 		map_width = 100*12*2.54				# cm
 		map_height = 200*12*2.54			# cm
 
@@ -47,7 +52,7 @@ class Avoidance():
 		# Create initial map of environment
 		map = AStar(map_width, map_height, vehicle_width)
 
-		while True:
+		while not self.stopped:
 			data = 500000*np.ones(360)
 
 			# TODO: Update location based on GPS and direction based on Compass
@@ -128,3 +133,6 @@ class Avoidance():
 			# TODO: send instructions to motor control
 			#location = min_location
 			#direction = viable_angles[min_index]
+
+	def stop(self):
+		self.stopped = True

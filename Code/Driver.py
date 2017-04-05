@@ -11,11 +11,13 @@ Description: Starts threads to manage sensors and run vehicle
 import os
 import time
 import logging
+import wiringpi2 as wpi
 from GPS import GPS
 from LMS import LMS
 from Camera import Camera
 from Compass import Compass
 from Sensors import Sensors
+from Avoidance import Avoidance
 from threading import Thread, Semaphore
 
 IGVC_HOME = "/home/odroid/IGVC2017"
@@ -72,7 +74,7 @@ def main():
 		compass_stack, compass_n, compass_s
 	)
 
-	# Start the threads
+	# Start the sensor threads
 	logger.debug("Setup complete")
 	logger.debug("Starting GPS thread")
 	gps_sensor.start()
@@ -83,11 +85,31 @@ def main():
 	logger.debug("Starting compass thread")
 	compass.start();
 
-	logger.debug("All threads started, beginning navigation")
-	time.sleep(30)
+
+	# Set up wiringpi2 and GPIO pin 6 as input
+	logger.debug("Sensor threads started, waiting for motors to turn on")
+	motors_on_pin = 6
+	wpi.wiringPiSetup()
+	wpi.pinMode(motors_on_pin, 0)
+
+	# Wait for motor controller to be turned on
+	motors_on = False
+	while not motors_on:
+		value = wpi.digitalRead(motors_on_pin)
+		if value == 1:
+			motors_on = True
+		else:
+			time.sleep(1)
+
+	logger.debug("Motors are on, begin autonomous navigation")
+	path_find = Avoidance()
+	path_find.start()
+
+	time.sleep(10)
 
 	# Stop the threads
 	logger.debug("Calling for threads to stop")
+	path_find.stop()
 	gps_sensor.stop()
 	lms_sensor.stop()
 	camera_controller.stop()
@@ -95,6 +117,7 @@ def main():
 
 	# Clean up the threads
 	logger.debug("Waiting for threads to end")
+	path_find.join()
 	gps_sensor.join()
 	lms_sensor.join()
 	camera_controller.join()
