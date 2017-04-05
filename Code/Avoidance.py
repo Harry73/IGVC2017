@@ -26,13 +26,19 @@ class Avoidance(Thread):
 		super(Avoidance, self).__init__()
 
 		self.sensors = sensors
-		self.motors = Motors()
-		self.motors.start()
-		self.motors.restart()
 
 		self.location = (600, 580)	# Initial position (bottom center)
 		self.direction = 90			# Intial direction, foward (degrees)
 		self.goal = (600, 80)		# Target to reach
+
+		self.initial_direction = (
+			(sensors.compass_data())[0] +
+			(sensors.compass_data())[0] +
+			(sensors.compass_data())[0])/3
+
+		self.motors = Motors()
+		self.motors.start()
+		self.motors.restart()
 
 		self.stopped = False
 
@@ -57,8 +63,8 @@ class Avoidance(Thread):
 
 			# TODO: Update location based on GPS and direction based on Compass
 			data[0:181] = self.sensors.lidar_data()
-			#vis.setLocation(location)
-			#vis.setDirection(direction)
+			direction = (self.sensors.compass_data())[0]
+			direction = (direction - self.initial_direction) % 360 # normalize direction to programatic world
 
 			# Add in past 2 data sets from sensors
 			for sample in map.last_data_set:
@@ -99,14 +105,15 @@ class Avoidance(Thread):
 				if viable:
 					viable_angles.append(theta)
 
-			# If there are no viable angles, try adjusting parameters
+			# If there are no viable angles, try decreasing R
 			if len(viable_angles) == 0:
-				if R > buff_width/2:	# Try decreasing R
+				if R > buff_width/2:
 					print("No viable angles, decreasing R")
 					R = int(R*0.9)
 					continue
 				else:	# Stuck situation
 					# TODO: Use A* and Map to find a path out
+					motors.stop()
 					print("Help, I'm stuck and too stupid to get out!")
 					break
 			else:
@@ -131,6 +138,12 @@ class Avoidance(Thread):
 			map.record_data(data, self.location, self.direction)
 
 			# TODO: send instructions to motor control
+			# Calculate speed and turning based on amount of turn desired
+			angle_change = viable_angles[min_index] - direction
+			speed_signal = 3*math.abs(angle_change)/20 - 150
+			turn_signal = -100*angle_change/9 + 1000
+			motors.drive(speed_signal)
+			motors.turn(turn_signal)
 			#location = min_location
 			#direction = viable_angles[min_index]
 
