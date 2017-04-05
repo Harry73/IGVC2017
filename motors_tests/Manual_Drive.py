@@ -31,6 +31,8 @@ def main():
 
 def run():
 	start = False
+	value1 = "hi"
+	value2 = "hi"
 
 	# Main "game" loop
 	while True:
@@ -48,22 +50,32 @@ def run():
 				sys.exit()
 
 			# Draw a background guide
-			elif event.type == MOUSEMOTION:
-				mouseX, mouseY = event.pos
-				
 			elif event.type == MOUSEBUTTONDOWN:
 				mouseX, mouseY = event.pos
-				if mouseX >= 200 and mouseX <= 300:		# no turn
-					motors.turn(1000)
-					value2 = "no turn"
-				elif mouseX < 200:						# left
-					pulse = int(-5/2*mouseX+1500)
-					motors.turn(pulse)
-					value2 = str(pulse)
-				elif mouseX > 300:						# right
-					pulse = int(-5/2*mouseX+1750)
-					motors.turn(pulse)
-					value2 = str(pulse)
+				if start:
+					if mouseY >= 200 and mouseY <= 300:		# stop
+						motors.drive(1360)
+						value1 = "stop"
+					elif mouseY < 200:						# forward
+						pulse = int(8/5*mouseY+1000)
+						motors.drive(pulse)
+						value1 = str(pulse)
+					elif mouseY > 300:						# backward
+						pulse = int(8/5*mouseY+920)
+						motors.drive(pulse)
+						value1 = str(pulse)
+
+					if mouseX >= 200 and mouseX <= 300:		# no turn
+						motors.turn(1000)
+						value2 = "no turn"
+					elif mouseX < 200:						# left
+						pulse = int(-5/2*mouseX+1500)
+						motors.turn(pulse)
+						value2 = str(pulse)
+					elif mouseX > 300:						# right
+						pulse = int(-5/2*mouseX+1750)
+						motors.turn(pulse)
+						value2 = str(pulse)
 
 			# Toggle starting and stopping the control
 			elif event.type == KEYDOWN and event.key == K_RETURN:
@@ -75,21 +87,8 @@ def run():
 					start = True
 
 		# Handle vehicle control
-		if start:
-			if mouseY >= 200 and mouseY <= 300:		# stop
-				motors.drive(1360)
-				value1 = "stop"
-			elif mouseY < 200:						# forward
-				pulse = int(8/5*mouseY+1000)
-				motors.drive(pulse)
-				value1 = str(pulse)
-			elif mouseY > 300:						# backward
-				pulse = int(8/5*mouseY+920)
-				motors.drive(pulse)
-				value1 = str(pulse)
-
-			label = FONT.render("{0}, {1}".format(value1, value2), 1, BLACK)
-			WINDOW.blit(label, (400, 10))
+		label = FONT.render("{0}, {1}".format(value1, value2), 1, BLACK)
+		WINDOW.blit(label, (400, 10))
 
 		# Redraw window
 		pygame.display.update()

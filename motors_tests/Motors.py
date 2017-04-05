@@ -10,7 +10,7 @@ class Motors(Thread):
 		super(Motors, self).__init__()
 		wpi.wiringPiSetup()
 
-		self.drive_pin = 11
+		self.drive_pin = 4
 		wpi.pinMode(self.drive_pin, 1)
 		wpi.digitalWrite(self.drive_pin, 0)
 		
