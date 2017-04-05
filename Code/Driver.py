@@ -5,7 +5,11 @@ Description: Starts threads to manage sensors and run vehicle
 	Uses links created by udev rules to determine the hardware path
 	of each usb device.
 
-	Currently starts GPS, LMS, Camera, and Compass threads
+	Behavior:
+	1) Starts GPS, LMS, Camera, and Compass threads.
+	2) Waits for motor controller to be turned on.
+	3) Begins autonomous navigation using Avoidance.py.
+	4) Eventually stops all the threads and prints information.
 """
 
 import os
