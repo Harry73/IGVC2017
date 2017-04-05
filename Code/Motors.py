@@ -27,7 +27,7 @@ class Motors(Thread):
 		self.steering_frequency = int(1/60*1000000)	# 60 Hz
 		self.steering_pulse = 1000
 
-		self.stopped = 1	# Motors are initially stopped
+		self.stopped = 1	# Thread is initially paused
 
 	# Steering servo requires a pulse-width modulated signal, which the thread generates continuously
 	def run(self):
@@ -52,12 +52,16 @@ class Motors(Thread):
 		wpi.delayMicroseconds(drive_pulse)
 		wpi.digitalWrite(self.drive_pin, 0)
 
+	# Unpause the thread
 	def restart(self):
 		self.stopped = 0
 
-	# Terminate the thread
+	# Pause the thread
 	def stop(self):
+		self.drive(1360)
 		self.stopped = 1
 
+	# Terminate the thread
 	def terminate(self):
+		self.drive(1360)
 		self.stopped = -1
