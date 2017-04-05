@@ -27,7 +27,6 @@ def main():
 	# Motors setup
 	motors = Motors()
 	motors.start()
-	motors.restart()
 
 	run()
 
@@ -35,16 +34,20 @@ def run():
 	start = False
 	value1 = "hi"
 	value2 = "hi"
-	
+
+	# First time draw
+	WINDOW.fill(GREEN)
+	pygame.draw.rect(WINDOW, YELLOW, (0, 200, 500, 100))
+	pygame.draw.rect(WINDOW, YELLOW, (200, 0, 100, 500))
+	pygame.draw.rect(WINDOW, RED, (200, 200, 100, 100))
+	label = FONT.render("{0}, {1}".format(value1, value2), 1, BLACK)
+	WINDOW.blit(label, (400, 10))
+	pygame.display.update()
+
 	# Main "game" loop
 	while True:
 		# Handle events
 		for event in pygame.event.get():
-			WINDOW.fill(GREEN)
-			pygame.draw.rect(WINDOW, YELLOW, (0, 200, 500, 100))
-			pygame.draw.rect(WINDOW, YELLOW, (200, 0, 100, 500))
-			pygame.draw.rect(WINDOW, RED, (200, 200, 100, 100))
-
 			# Quit conditions
 			if event.type == QUIT or (event.type == KEYDOWN and (event.key == K_ESCAPE or event.key == K_q)):
 				motors.terminate()
@@ -79,6 +82,15 @@ def run():
 						motors.turn(pulse)
 						value2 = str(pulse)
 
+					# Redraw window
+					WINDOW.fill(GREEN)
+					pygame.draw.rect(WINDOW, YELLOW, (0, 200, 500, 100))
+					pygame.draw.rect(WINDOW, YELLOW, (200, 0, 100, 500))
+					pygame.draw.rect(WINDOW, RED, (200, 200, 100, 100))
+					label = FONT.render("{0}, {1}".format(value1, value2), 1, BLACK)
+					WINDOW.blit(label, (400, 10))
+					pygame.display.update()
+
 			# Toggle starting and stopping the control
 			elif event.type == KEYDOWN and event.key == K_RETURN:
 				if start:
@@ -88,13 +100,14 @@ def run():
 					motors.restart()
 					start = True
 
-		# Handle vehicle control
-		label = FONT.render("{0}, {1}".format(value1, value2), 1, BLACK)
-		WINDOW.blit(label, (400, 10))
-
-		# Redraw window
-		pygame.display.update()
-		time.sleep(0.1)
+				# Redraw window
+				WINDOW.fill(GREEN)
+				pygame.draw.rect(WINDOW, YELLOW, (0, 200, 500, 100))
+				pygame.draw.rect(WINDOW, YELLOW, (200, 0, 100, 500))
+				pygame.draw.rect(WINDOW, RED, (200, 200, 100, 100))
+				label = FONT.render("{0}, {1}".format(value1, value2), 1, BLACK)
+				WINDOW.blit(label, (400, 10))
+				pygame.display.update()
 
 if __name__ == "__main__":
 	main()
