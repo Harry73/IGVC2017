@@ -19,9 +19,9 @@ import math
 import numpy as np
 from AStar import AStar
 from Motors import Motors
-from threading import Thread
+from multiprocessing import Process
 
-class Avoidance(Thread):
+class Avoidance(Process):
 	def __init__(self, sensors):
 		super(Avoidance, self).__init__()
 

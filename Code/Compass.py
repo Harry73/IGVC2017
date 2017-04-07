@@ -21,13 +21,13 @@ On the odroid, this is set automatically in bash.
 
 import time
 import logging
-from threading import Thread
+from multiprocessing import Process
 from i2clibraries import i2c_hmc5883l
 
-class Compass(Thread):
+class Compass(Process):
 
 	def __init__(self, compass_stack, compass_n, compass_s):
-		# Call Thread initializer
+		# Call Process initializer
 		super(Compass, self).__init__()
 
 		# Get IGVC logger
@@ -69,9 +69,9 @@ class Compass(Thread):
 # Test run
 if __name__ == "__main__":
 	import os
-	from threading import Semaphore
+	from multiprocessing import Semaphore, Manager
 	
-	compass_data_stack = []
+	compass_data_stack = Manager().list()
 	compass = Compass(compass_data_stack, Semaphore(0), Semaphore(1))
 	
 	compass.start()

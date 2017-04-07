@@ -14,12 +14,12 @@ import math
 import logging
 import binascii
 import numpy as np
-from threading import Thread
+from multiprocessing import Process
 
-class LMS(Thread):
+class LMS(Process):
 
 	def __init__(self, lms_data_stack, lms_n, lms_s, device_path):
-		# Call Thread initializer
+		# Call Process initializer
 		super(LMS, self).__init__()
 
 		# Get IGVC logger
@@ -129,9 +129,9 @@ class LMS(Thread):
 # Test run
 if __name__ == "__main__":
 	import os
-	from threading import Semaphore
+	from multiprocessing import Semaphore, Manager
 	
-	lms_data_stack = []
+	lms_data_stack = Manager().list()
 	lms = LMS(lms_data_stack, Semaphore(0), Semaphore(1), "/dev/" + os.readlink("/dev/IGVC_LIDAR"))
 	
 	lms.start()

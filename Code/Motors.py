@@ -8,9 +8,9 @@ Description: Motor Controller
 """
 
 import wiringpi2 as wpi
-from threading import Thread
+from multiprocessing import Process
 
-class Motors(Thread):
+class Motors(Process):
 
 	# Initial setup
 	def __init__(self):

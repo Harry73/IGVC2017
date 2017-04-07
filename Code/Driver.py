@@ -22,7 +22,7 @@ from Camera import Camera
 from Compass import Compass
 from Sensors import Sensors
 from Avoidance import Avoidance
-from threading import Thread, Semaphore
+from multiprocessing import Semaphore, Manager
 
 IGVC_HOME = "/home/odroid/IGVC2017"
 
@@ -40,7 +40,7 @@ def main():
 
 	# GPS setup
 	logger.debug("Beginning GPS setup")
-	gps_coords_stack = []
+	gps_coords_stack = Manager().list()
 	gps_n = Semaphore(0)
 	gps_s = Semaphore(1)
 	gps_sensor = GPS(gps_coords_stack, gps_n, gps_s, device_to_path["GPS"])
@@ -48,7 +48,7 @@ def main():
 
 	# LMS setup
 	logger.debug("Beginning LiDAR setup")
-	lms_data_stack = []
+	lms_data_stack = Manager().list()
 	lms_n = Semaphore(0)
 	lms_s = Semaphore(1)
 	lms_sensor = LMS(lms_data_stack, lms_n, lms_s, device_to_path["LMS"])
@@ -56,7 +56,7 @@ def main():
 
 	# Camera setup
 	logger.debug("Beginning camera setup")
-	camera_lines_stack = []
+	camera_lines_stack = Manager().list()
 	camera_n = Semaphore(0)
 	camera_s = Semaphore(1)
 	camera_controller = Camera(camera_lines_stack, camera_n, camera_s, device_to_path["RIGHT_CAM"], device_to_path["LEFT_CAM"])
@@ -64,7 +64,7 @@ def main():
 
 	# Compass setup
 	logger.debug("Beginning compass setup")
-	compass_stack = []
+	compass_stack = Manager().list()
 	compass_n = Semaphore(0)
 	compass_s = Semaphore(1)
 	compass = Compass(compass_stack, compass_n, compass_s)

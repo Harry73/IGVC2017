@@ -8,7 +8,6 @@ Description: Sensor aggregation class
 """
 
 import logging
-from threading import Thread
 
 class Sensors():
 
