@@ -10,6 +10,8 @@ Description: Obstacle Avoidance Algorithm
 	the range R and the width equal to the robot's width plus a buffer distance
 	to determine if the angle is viable. From all these viable angles, the
 	angle that will move the agent towards the goal the fastest is selected.
+
+	This file acts as the centerpiece that connects and uses the other classes
 """
 
 import cv2
@@ -17,21 +19,34 @@ import math
 import numpy as np
 from AStar import AStar
 from Motors import Motors
+from multiprocessing import Process
 
-class Avoidance():
+class Avoidance(Process):
 	def __init__(self, sensors):
+		super(Avoidance, self).__init__()
+
 		self.sensors = sensors
+
+		# Initial conditions in the programmatic world
+		self.normal_location = (600, 580)
+		self.normal_direction = 180
+		self.normal_goal = (600, 80)
+
+		self.initial_direction = (
+			(sensors.compass_data())[0] +
+			(sensors.compass_data())[0] +
+			(sensors.compass_data())[0])/3
+
 		self.motors = Motors()
 		self.motors.start()
 		self.motors.restart()
 
-	def avoid(self):
+		self.stopped = False
+
+	def run(self):
 		map_width = 100*12*2.54				# cm
 		map_height = 200*12*2.54			# cm
 
-		location = (600, 580)		# Initial position (bottom center)
-		goal = (600, 80)			# Goal
-		direction = 180				# Initial direction (degrees)
 		vehicle_width = 35*2.54		# Width of agent (cm)
 
 		buffer_distance = 12*2.54	# Space to keep between agent and obstacles (cm)
@@ -40,24 +55,24 @@ class Avoidance():
 		MAX_R = int(10*12*2.54)		# Maximum distance to consider (cm)
 		R = MAX_R					# Maximum distance to consider for a iteration
 		move_scale = 0.25			# Percentage of R to actually move
-		
+
 		# Create initial map of environment
 		map = AStar(map_width, map_height, vehicle_width)
 
-		while True:
+		while not self.stopped:
 			data = 500000*np.ones(360)
-			
-			# TODO: Update location based on GPS and direction based on Compass
-			data[0:181] = self.sensors.lidar_data()
-			#vis.setLocation(location)
-			#vis.setDirection(direction)
+
+			# TODO: Update location based on GPS
+			data[0:181] = self.sensors.lidar_data()				# Get LiDAR data
+			self.direction = (self.sensors.compass_data())[0]	# Get compass degrees
+			self.direction = (self.direction - (self.initial_direction-self.normal_direction)) % 360 # Normalize direction to programatic world
 
 			# Add in past 2 data sets from sensors
 			for sample in map.last_data_set:
-				r = math.sqrt(math.pow(location[0]-sample[0], 2) + math.pow(location[1]-sample[1], 2))
-				theta = math.atan2(location[1]-sample[1], location[0]-sample[0])
+				r = math.sqrt(math.pow(self.location[0]-sample[0], 2) + math.pow(self.location[1]-sample[1], 2))
+				theta = math.atan2(self.location[1]-sample[1], self.location[0]-sample[0])
 				theta = np.pi - theta	# Needed because y coordinates are upside down
-				theta = (theta*180/np.pi - (direction-90))	# Find relative angle from absolute
+				theta = (theta*180/np.pi - (self.direction-90))	# Find relative angle from absolute
 				theta = theta % 360
 
 				# Only modify unknown region around agent
@@ -69,7 +84,7 @@ class Avoidance():
 			# Pick a direction to move
 			viable_angles = []
 			for i in range(45, 136):
-				theta = (direction - 90 + i) % 360
+				theta = (self.direction - 90 + i) % 360
 				viable = True
 				for rgn in range(math.ceil(buff_width/2), R+10, 5):
 					# Calculate theta range and limits to search for obstacles in range rgn
@@ -91,14 +106,15 @@ class Avoidance():
 				if viable:
 					viable_angles.append(theta)
 
-			# If there are no viable angles, try adjusting parameters
+			# If there are no viable angles, try decreasing R
 			if len(viable_angles) == 0:
-				if R > buff_width/2:	# Try decreasing R
+				if R > buff_width/2:
 					print("No viable angles, decreasing R")
 					R = int(R*0.9)
 					continue
 				else:	# Stuck situation
 					# TODO: Use A* and Map to find a path out
+					motors.stop()
 					print("Help, I'm stuck and too stupid to get out!")
 					break
 			else:
@@ -109,9 +125,9 @@ class Avoidance():
 			min_distance = 10000000
 			for i, angle in enumerate(viable_angles):
 				# Simulate moving forward R movement at the current angle and calculate distance to goal
-				x = location[0] + move_scale*R*np.cos(angle*np.pi/180)
-				y = location[1] - move_scale*R*np.sin(angle*np.pi/180)
-				sim_distance = math.sqrt(math.pow(x-goal[0], 2) + math.pow(y-goal[1], 2))
+				x = self.location[0] + move_scale*R*np.cos(angle*np.pi/180)
+				y = self.location[1] - move_scale*R*np.sin(angle*np.pi/180)
+				sim_distance = math.sqrt(math.pow(x-self.normal_goal[0], 2) + math.pow(y-self.normal_goal[1], 2))
 
 				# Keep the minimum distance to find the most efficient angle
 				if sim_distance < min_distance:
@@ -120,8 +136,17 @@ class Avoidance():
 					min_location = (int(x), int(y))
 
 			# Record the resulting data
-			map.record_data(data, location, direction)
+			map.record_data(data, self.location, self.direction)
 
 			# TODO: send instructions to motor control
+			# Calculate speed and turning based on amount of turn desired
+			angle_change = viable_angles[min_index] - self.direction
+			speed_signal = 3*math.abs(angle_change)/20 - 150
+			turn_signal = -100*angle_change/9 + 1000
+			motors.drive(speed_signal)
+			motors.turn(turn_signal)
 			#location = min_location
 			#direction = viable_angles[min_index]
+
+	def stop(self):
+		self.stopped = True

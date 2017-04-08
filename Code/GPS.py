@@ -12,12 +12,12 @@ import time
 import logging
 import subprocess
 from gps3.agps3threaded import AGPS3mechanism
-from threading import Thread
+from multiprocessing import Process
 
-class GPS(Thread):
+class GPS(Process):
 
 	def __init__(self, gps_stack, gps_n, gps_s, device_path):
-		# Call Thread initializer
+		# Call Process initializer
 		super(GPS, self).__init__()
 
 		# Get IGVC logger
@@ -42,7 +42,7 @@ class GPS(Thread):
 		self.logger.debug("Starting GPS data collection")
 		self.agps_thread.run_thread()
 
-	# Thread operation
+	# Process operation
 	def run(self):
 		time.sleep(1)	# Let GPS warm up a bit
 
@@ -72,9 +72,9 @@ class GPS(Thread):
 # Test run
 if __name__ == "__main__":
 	import os
-	from threading import Semaphore
+	from multiprocessing import Semaphore, Manager
 	
-	gps_coords_stack = []
+	gps_coords_stack = Manager().list()
 	gps = GPS(gps_coords_stack, Semaphore(0), Semaphore(1), "/dev/" + os.readlink("/dev/IGVC_GPS"))
 	
 	gps.start()

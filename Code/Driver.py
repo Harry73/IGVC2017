@@ -5,17 +5,24 @@ Description: Starts threads to manage sensors and run vehicle
 	Uses links created by udev rules to determine the hardware path
 	of each usb device.
 
-	Currently starts GPS, LMS, Camera, and Compass threads
+	Behavior:
+	1) Starts GPS, LMS, Camera, and Compass threads.
+	2) Waits for motor controller to be turned on.
+	3) Begins autonomous navigation using Avoidance.py.
+	4) Eventually stops all the threads and prints information.
 """
 
 import os
 import time
 import logging
+import wiringpi2 as wpi
 from GPS import GPS
 from LMS import LMS
 from Camera import Camera
 from Compass import Compass
-from threading import Thread, Semaphore
+from Sensors import Sensors
+from Avoidance import Avoidance
+from multiprocessing import Semaphore, Manager
 
 IGVC_HOME = "/home/odroid/IGVC2017"
 
@@ -33,7 +40,7 @@ def main():
 
 	# GPS setup
 	logger.debug("Beginning GPS setup")
-	gps_coords_stack = []
+	gps_coords_stack = Manager().list()
 	gps_n = Semaphore(0)
 	gps_s = Semaphore(1)
 	gps_sensor = GPS(gps_coords_stack, gps_n, gps_s, device_to_path["GPS"])
@@ -41,7 +48,7 @@ def main():
 
 	# LMS setup
 	logger.debug("Beginning LiDAR setup")
-	lms_data_stack = []
+	lms_data_stack = Manager().list()
 	lms_n = Semaphore(0)
 	lms_s = Semaphore(1)
 	lms_sensor = LMS(lms_data_stack, lms_n, lms_s, device_to_path["LMS"])
@@ -49,7 +56,7 @@ def main():
 
 	# Camera setup
 	logger.debug("Beginning camera setup")
-	camera_lines_stack = []
+	camera_lines_stack = Manager().list()
 	camera_n = Semaphore(0)
 	camera_s = Semaphore(1)
 	camera_controller = Camera(camera_lines_stack, camera_n, camera_s, device_to_path["RIGHT_CAM"], device_to_path["LEFT_CAM"])
@@ -57,13 +64,21 @@ def main():
 
 	# Compass setup
 	logger.debug("Beginning compass setup")
-	compass_stack = []
+	compass_stack = Manager().list()
 	compass_n = Semaphore(0)
 	compass_s = Semaphore(1)
 	compass = Compass(compass_stack, compass_n, compass_s)
 	logger.debug("Compass setup complete")
 
-	# Start the threads
+	# Wrap all the sensors' stacks and semaphores into 1 object
+	sensors = Sensors(
+		gps_coords_stack, gps_n, gps_s,
+		lms_data_stack, lms_n, lms_s,
+		camera_lines_stack, camera_n, camera_s,
+		compass_stack, compass_n, compass_s
+	)
+
+	# Start the sensor threads
 	logger.debug("Setup complete")
 	logger.debug("Starting GPS thread")
 	gps_sensor.start()
@@ -74,11 +89,31 @@ def main():
 	logger.debug("Starting compass thread")
 	compass.start();
 
-	logger.debug("All threads started, beginning navigation")
-	time.sleep(30)
+
+	# Set up wiringpi2 and GPIO pin 6 as input
+	logger.debug("Sensor threads started, waiting for motors to turn on")
+	motors_on_pin = 6
+	wpi.wiringPiSetup()
+	wpi.pinMode(motors_on_pin, 0)
+
+	# Wait for motor controller to be turned on
+	motors_on = False
+	while not motors_on:
+		value = wpi.digitalRead(motors_on_pin)
+		if value == 1:
+			motors_on = True
+		else:
+			time.sleep(1)
+
+	logger.debug("Motors are on, begin autonomous navigation")
+	path_find = Avoidance()
+	path_find.start()
+
+	time.sleep(10)
 
 	# Stop the threads
 	logger.debug("Calling for threads to stop")
+	path_find.stop()
 	gps_sensor.stop()
 	lms_sensor.stop()
 	camera_controller.stop()
@@ -86,6 +121,7 @@ def main():
 
 	# Clean up the threads
 	logger.debug("Waiting for threads to end")
+	path_find.join()
 	gps_sensor.join()
 	lms_sensor.join()
 	camera_controller.join()

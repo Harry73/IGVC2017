@@ -13,12 +13,12 @@ import cv2
 import time
 import numpy as np
 import logging
-from threading import Thread
+from multiprocessing import Process
 
-class Camera(Thread):
+class Camera(Process):
 
 	def __init__(self, camera_stack, camera_n, camera_s, right_camera_index, left_camera_index):
-		# Call Thread initializer
+		# Call Process initializer
 		super(Camera, self).__init__()
 
 		# Get IGVC logger
@@ -88,9 +88,9 @@ class Camera(Thread):
 # Test run
 if __name__ == "__main__":
 	import os
-	from threading import Semaphore
+	from multiprocessing import Semaphore, Manager
 	
-	camera_data_stack = []
+	camera_data_stack = Manager().list()
 	camera = Camera(
 		camera_data_stack, 
 		Semaphore(0), 
