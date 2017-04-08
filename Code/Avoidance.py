@@ -27,9 +27,10 @@ class Avoidance(Process):
 
 		self.sensors = sensors
 
-		self.location = (600, 580)	# Initial position (bottom center)
-		self.direction = 90			# Intial direction, foward (degrees)
-		self.goal = (600, 80)		# Target to reach
+		# Initial conditions in the programmatic world
+		self.normal_location = (600, 580)
+		self.normal_direction = 180
+		self.normal_goal = (600, 80)
 
 		self.initial_direction = (
 			(sensors.compass_data())[0] +
@@ -61,10 +62,10 @@ class Avoidance(Process):
 		while not self.stopped:
 			data = 500000*np.ones(360)
 
-			# TODO: Update location based on GPS and direction based on Compass
-			data[0:181] = self.sensors.lidar_data()
-			direction = (self.sensors.compass_data())[0]
-			direction = (direction - self.initial_direction) % 360 # normalize direction to programatic world
+			# TODO: Update location based on GPS
+			data[0:181] = self.sensors.lidar_data()				# Get LiDAR data
+			self.direction = (self.sensors.compass_data())[0]	# Get compass degrees
+			self.direction = (self.direction - (self.initial_direction-self.normal_direction)) % 360 # Normalize direction to programatic world
 
 			# Add in past 2 data sets from sensors
 			for sample in map.last_data_set:
@@ -126,7 +127,7 @@ class Avoidance(Process):
 				# Simulate moving forward R movement at the current angle and calculate distance to goal
 				x = self.location[0] + move_scale*R*np.cos(angle*np.pi/180)
 				y = self.location[1] - move_scale*R*np.sin(angle*np.pi/180)
-				sim_distance = math.sqrt(math.pow(x-goal[0], 2) + math.pow(y-goal[1], 2))
+				sim_distance = math.sqrt(math.pow(x-self.normal_goal[0], 2) + math.pow(y-self.normal_goal[1], 2))
 
 				# Keep the minimum distance to find the most efficient angle
 				if sim_distance < min_distance:
@@ -139,7 +140,7 @@ class Avoidance(Process):
 
 			# TODO: send instructions to motor control
 			# Calculate speed and turning based on amount of turn desired
-			angle_change = viable_angles[min_index] - direction
+			angle_change = viable_angles[min_index] - self.direction
 			speed_signal = 3*math.abs(angle_change)/20 - 150
 			turn_signal = -100*angle_change/9 + 1000
 			motors.drive(speed_signal)
