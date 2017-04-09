@@ -108,6 +108,8 @@ def run():
 				label = FONT.render("{0}, {1}".format(value1, value2), 1, BLACK)
 				WINDOW.blit(label, (400, 10))
 				pygame.display.update()
+		
+		time.sleep(0.1)
 
 if __name__ == "__main__":
 	main()
