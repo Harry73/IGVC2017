@@ -29,7 +29,6 @@ class LMS(Process):
 		self.lms_data_stack = lms_data_stack
 		self.lms_n = lms_n
 		self.lms_s = lms_s
-		self.stopped = False
 				
 		# Set up serial port
 		self.ser = serial.Serial(
@@ -87,7 +86,7 @@ class LMS(Process):
 	# Scans based on settings and returns values in an array
 	def run(self):
 		# Run until the Driver calls for a stop
-		while not self.stopped:
+		while True:
 			self.ser.write(serial.to_bytes([0x02,0x00,0x02,0x00,0x30,0x01,0x31,0x18])) # Single Scan
 			response = self.ser.read()
 			
@@ -124,23 +123,23 @@ class LMS(Process):
 					self.lms_n.release()
 
 	def stop(self):
-		self.stopped = True
+		self.terminate()
 
 # Test run
 if __name__ == "__main__":
 	import os
 	from multiprocessing import Semaphore, Manager
-	
+
 	lms_data_stack = Manager().list()
 	lms = LMS(lms_data_stack, Semaphore(0), Semaphore(1), "/dev/" + os.readlink("/dev/IGVC_LIDAR"))
-	
+
 	lms.start()
-	
+
 	time.sleep(10)
-	
+
 	lms.stop()
 	lms.join()
-	
+
 	for set in lms_data_stack:
 		print(set)
 		print("---------------------------")

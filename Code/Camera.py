@@ -36,7 +36,7 @@ class Camera(Process):
 
 	def run(self):
 		# Run until Driver calls for a stop
-		while not self.stopped:
+		while True:
 			# Take a picture with each of the cameras
 			ret, right_frame = self.right_camera.read()
 			ret, left_frame = self.left_camera.read()
@@ -83,7 +83,7 @@ class Camera(Process):
 
 	# Tell run() to end
 	def stop(self):
-		self.stopped = True
+		self.terminate()
 		
 # Test run
 if __name__ == "__main__":

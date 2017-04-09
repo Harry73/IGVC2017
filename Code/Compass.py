@@ -37,7 +37,6 @@ class Compass(Process):
 		self.compass_stack = compass_stack
 		self.compass_n = compass_n
 		self.compass_s = compass_s
-		self.stopped = False
 
 		# Instantiates compass
 		self.compass = i2c_hmc5883l.i2c_hmc5883l(4)	# 4 is because /dev/i2c-4 is the GPIO I2C bus on the odroid
@@ -46,7 +45,7 @@ class Compass(Process):
 
 	def run(self):
 		# Run until Driver calls for a stop
-		while not self.stopped:
+		while True:
 			time.sleep(0.5)
 
 			# Get data from compass
@@ -64,7 +63,7 @@ class Compass(Process):
 
 	# Tell run() to end
 	def stop(self):
-		self.stopped = True
+		self.terminate()
 		
 # Test run
 if __name__ == "__main__":
