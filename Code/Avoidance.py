@@ -20,7 +20,7 @@ import math
 import numpy as np
 from AStar import AStar
 from Motors import Motors
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 
 class Avoidance(Process):
 	def __init__(self, sensors):
@@ -38,9 +38,12 @@ class Avoidance(Process):
 			(sensors.compass_data())[0] +
 			(sensors.compass_data())[0])/3
 
-#		self.motors = Motors()
-#		self.motors.start()
-#		self.motors.restart()
+		self.motors = Motors()
+		self.motors.start()
+		self.motors.restart()
+		
+		self.queue = Queue()
+		self.queue.put(self.motors)
 
 	def run(self):
 		map_width = 100*12*2.54				# cm
@@ -58,11 +61,9 @@ class Avoidance(Process):
 		# Create initial map of environment
 		map = AStar(map_width, map_height, vehicle_width)
 		
-		self.motors = Motors()
-		self.motors.start()
-		self.motors.restart()
+		self.motors = self.queue.get()
 
-		while True:
+		while self.queue.empty():
 			data = 500000*np.ones(360)
 
 			# TODO: Update location based on GPS
@@ -156,4 +157,4 @@ class Avoidance(Process):
 
 	def stop(self):
 		self.motors.terminate()
-		self.terminate()
+		self.queue.put(True)

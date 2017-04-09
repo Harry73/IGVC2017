@@ -12,7 +12,7 @@ import time
 import logging
 import subprocess
 from gps3.agps3threaded import AGPS3mechanism
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 
 class GPS(Process):
 
@@ -34,6 +34,7 @@ class GPS(Process):
 		self.gps_stack = gps_stack
 		self.gps_n = gps_n
 		self.gps_s = gps_s
+		self.stopped = Queue()
 
 		# Instantiates AGPS3 mechanisms and sets up the data stream
 		self.agps_thread = AGPS3mechanism()
@@ -46,7 +47,7 @@ class GPS(Process):
 		time.sleep(1)	# Let GPS warm up a bit
 
 		# Run until Driver calls for a stop
-		while True:
+		while self.stopped.empty():
 			time.sleep(0.25)	# New request every 0.25s
 
 			# Get coordinates
@@ -66,7 +67,7 @@ class GPS(Process):
 		return position
 
 	def stop(self):
-		self.terminate()
+		self.stopped.put(True)
 		
 # Test run
 if __name__ == "__main__":

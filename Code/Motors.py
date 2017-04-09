@@ -8,9 +8,9 @@ Description: Motor Controller
 """
 
 import wiringpi2 as wpi
-from threading import Thread
+from multiprocessing import Process, Queue
 
-class Motors(Thread):
+class Motors(Process):
 
 	# Initial setup
 	def __init__(self):
@@ -25,13 +25,21 @@ class Motors(Thread):
 		wpi.pinMode(self.steering_pin, 1)
 		wpi.digitalWrite(self.steering_pin, 0)
 		self.steering_frequency = int(1/60*1000000)	# 60 Hz
-		self.steering_pulse = 1000
+		self.steer_queue = Queue()
+		self.steer_queue.put(1000)
 
-		self.stopped = 1	# Thread is initially paused
+		self.control_queue = Queue()
+		self.control_queue.put(1)		# Thread is initially paused
 
 	# Steering servo requires a pulse-width modulated signal, which the thread generates continuously
 	def run(self):
 		while True:
+			if not self.control_queue.empty():
+				self.stopped = self.control_queue.get()
+				
+			if not self.steer_queue.empty():
+				self.steering_pulse = self.steer_queue.get()
+		
 			if self.stopped == 1:
 				pass
 			elif self.stopped == 0:
@@ -44,7 +52,7 @@ class Motors(Thread):
 
 	# Change the width of the steering pulse
 	def turn(self, pulse):
-		self.steering_pulse = pulse
+		self.steer_queue.put(pulse)
 
 	# Send a single pulse signal to the drive motor
 	def drive(self, drive_pulse):
@@ -54,14 +62,14 @@ class Motors(Thread):
 
 	# Unpause the thread
 	def restart(self):
-		self.stopped = 0
+		self.control_queue.put(0)
 
 	# Pause the thread
 	def stop(self):
 		self.drive(1360)
-		self.stopped = 1
+		self.control_queue.put(1)
 
 	# Terminate the thread
 	def terminate(self):
 		self.drive(1360)
-		self.stopped = -1
+		self.control_queue.put(-1)

@@ -14,7 +14,7 @@ import math
 import logging
 import binascii
 import numpy as np
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 
 class LMS(Process):
 
@@ -29,6 +29,7 @@ class LMS(Process):
 		self.lms_data_stack = lms_data_stack
 		self.lms_n = lms_n
 		self.lms_s = lms_s
+		self.stopped = Queue()
 				
 		# Set up serial port
 		self.ser = serial.Serial(
@@ -86,7 +87,7 @@ class LMS(Process):
 	# Scans based on settings and returns values in an array
 	def run(self):
 		# Run until the Driver calls for a stop
-		while True:
+		while self.stopped.empty():
 			self.ser.write(serial.to_bytes([0x02,0x00,0x02,0x00,0x30,0x01,0x31,0x18])) # Single Scan
 			response = self.ser.read()
 			
@@ -123,7 +124,7 @@ class LMS(Process):
 					self.lms_n.release()
 
 	def stop(self):
-		self.terminate()
+		self.stopped.put(True)
 
 # Test run
 if __name__ == "__main__":

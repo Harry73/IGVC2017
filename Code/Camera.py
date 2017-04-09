@@ -13,7 +13,7 @@ import cv2
 import time
 import numpy as np
 import logging
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 
 class Camera(Process):
 
@@ -28,7 +28,7 @@ class Camera(Process):
 		self.camera_stack = camera_stack
 		self.camera_n = camera_n
 		self.camera_s = camera_s
-		self.stopped = False
+		self.stopped = Queue()
 
 		# Instantiates cameras
 		self.right_camera = cv2.VideoCapture(right_camera_index)
@@ -36,7 +36,7 @@ class Camera(Process):
 
 	def run(self):
 		# Run until Driver calls for a stop
-		while True:
+		while self.stopped.empty():
 			# Take a picture with each of the cameras
 			ret, right_frame = self.right_camera.read()
 			ret, left_frame = self.left_camera.read()
@@ -83,7 +83,7 @@ class Camera(Process):
 
 	# Tell run() to end
 	def stop(self):
-		self.terminate()
+		self.stopped.put(True)
 		
 # Test run
 if __name__ == "__main__":

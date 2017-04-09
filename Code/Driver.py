@@ -114,6 +114,7 @@ def main():
 	# Stop the threads
 	logger.debug("Calling for threads to stop")
 	path_find.stop()
+	time.sleep(1)
 	gps_sensor.stop()
 	lms_sensor.stop()
 	camera_controller.stop()
