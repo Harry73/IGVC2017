@@ -1,6 +1,6 @@
 import time
 import psutil
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 
 class Consumer(Process):
 	def __init__(self, stack, n, s):
@@ -8,12 +8,11 @@ class Consumer(Process):
 		self.stack = stack
 		self.n = n
 		self.s = s
+		self.queue = Queue()
 		
 	def run(self):
-		count = 0
-	
-		# Consume until 20 numbers
-		while count < 50:
+		# Consume
+		while True:
 			# Obtain semaphores, pop from stack, release semaphores
 			print("Consumer requesting n semaphore")
 			self.n.acquire()
@@ -28,8 +27,10 @@ class Consumer(Process):
 			print("Consumer releasing s semaphore")
 			self.s.release()
 			
-			count += 1
+			if not self.queue.empty():
+				break
 			
 		print("Consumer pid: {0}".format(psutil.Process().pid))
 		
-			
+	def stop(self):
+		self.queue.put(True)

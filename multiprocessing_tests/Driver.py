@@ -1,6 +1,7 @@
+import time
 from Consumer import Consumer
 from Producer import Producer
-from multiprocessing import Semaphore, Manager
+from multiprocessing import Semaphore, Manager, Queue
 
 # Trying out a standard solution for the producer-consumer concurrency paradigm.
 # Counting semaphores n and s maintain proper access to the data structure.
@@ -13,26 +14,32 @@ def main():
 	
 	# Create Producer and Consumer threads
 	producer1 = Producer(stack, n, s, 1)
-	producer2 = Producer(stack, n, s, 2)
-	producer3 = Producer(stack, n, s, 3)
-	producer4 = Producer(stack, n, s, 4)
-	producer5 = Producer(stack, n, s, 5)
+	#producer2 = Producer(stack, n, s, 2)
+	#producer3 = Producer(stack, n, s, 3)
+	#producer4 = Producer(stack, n, s, 4)
+	#producer5 = Producer(stack, n, s, 5)
 	consumer = Consumer(stack, n, s)
 	
 	# Start all the threads
 	producer1.start()
-	producer2.start()
-	producer3.start()
-	producer4.start()
-	producer5.start()
+	#producer2.start()
+	#producer3.start()
+	#producer4.start()
+	#producer5.start()
 	consumer.start()
+	
+	time.sleep(2)
+	
+	consumer.stop()
+	time.sleep(0.1)
+	producer1.stop()
 	
 	# Wait for threads to finish
 	producer1.join()
-	producer2.join()
-	producer3.join()
-	producer4.join()
-	producer5.join()
+	#producer2.join()
+	#producer3.join()
+	#producer4.join()
+	#producer5.join()
 	consumer.join()
 	
 	print("Done.")
