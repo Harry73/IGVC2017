@@ -106,7 +106,7 @@ def main():
 			time.sleep(1)
 
 	logger.debug("Motors are on, begin autonomous navigation")
-	path_find = Avoidance()
+	path_find = Avoidance(sensors)
 	path_find.start()
 
 	time.sleep(10)
