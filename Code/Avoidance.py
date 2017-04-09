@@ -15,6 +15,7 @@ Description: Obstacle Avoidance Algorithm
 """
 
 import cv2
+import time
 import math
 import numpy as np
 from AStar import AStar
@@ -37,11 +38,9 @@ class Avoidance(Process):
 			(sensors.compass_data())[0] +
 			(sensors.compass_data())[0])/3
 
-		self.motors = Motors()
-		self.motors.start()
-		self.motors.restart()
-
-		self.stopped = False
+#		self.motors = Motors()
+#		self.motors.start()
+#		self.motors.restart()
 
 	def run(self):
 		map_width = 100*12*2.54				# cm
@@ -58,14 +57,19 @@ class Avoidance(Process):
 
 		# Create initial map of environment
 		map = AStar(map_width, map_height, vehicle_width)
+		
+		self.motors = Motors()
+		self.motors.start()
+		self.motors.restart()
 
-		while not self.stopped:
+		while True:
 			data = 500000*np.ones(360)
 
 			# TODO: Update location based on GPS
-			data[0:181] = self.sensors.lidar_data()				# Get LiDAR data
+			data[0:182] = self.sensors.lidar_data()				# Get LiDAR data
 			self.direction = (self.sensors.compass_data())[0]	# Get compass degrees
 			self.direction = (self.direction - (self.initial_direction-self.normal_direction)) % 360 # Normalize direction to programatic world
+			self.location = (0, 0)
 
 			# Add in past 2 data sets from sensors
 			for sample in map.last_data_set:
@@ -114,7 +118,7 @@ class Avoidance(Process):
 					continue
 				else:	# Stuck situation
 					# TODO: Use A* and Map to find a path out
-					motors.stop()
+#					motors.stop()
 					print("Help, I'm stuck and too stupid to get out!")
 					break
 			else:
@@ -141,12 +145,15 @@ class Avoidance(Process):
 			# TODO: send instructions to motor control
 			# Calculate speed and turning based on amount of turn desired
 			angle_change = viable_angles[min_index] - self.direction
-			speed_signal = 3*math.abs(angle_change)/20 - 150
+			speed_signal = 3*math.fabs(angle_change)/20 - 150
 			turn_signal = -100*angle_change/9 + 1000
-			motors.drive(speed_signal)
-			motors.turn(turn_signal)
+			print("Turn to: {0}".format(angle_change))
+			print("Turn signal: {0}".format(turn_signal))
+#			self.motors.drive(speed_signal)
+			self.motors.turn(int(turn_signal))
 			#location = min_location
 			#direction = viable_angles[min_index]
 
 	def stop(self):
-		self.stopped = True
+		self.motors.terminate()
+		self.terminate()
