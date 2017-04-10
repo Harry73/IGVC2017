@@ -49,8 +49,9 @@ class Compass(Process):
 		while self.stopped.empty():
 			time.sleep(0.5)
 
-			# Get data from compass
+			# Get angle from compass
 			heading = self.compass.getHeading()
+			heading = heading[0] + heading[1]/60	# Convert to decimal
 
 			# Push the heading on the stack thread-safely
 			self.compass_s.acquire()
