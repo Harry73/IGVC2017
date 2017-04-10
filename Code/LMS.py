@@ -30,7 +30,7 @@ class LMS(Process):
 		self.lms_n = lms_n
 		self.lms_s = lms_s
 		self.stopped = Queue()
-				
+
 		# Set up serial port
 		self.ser = serial.Serial(
 			port = device_path,
@@ -89,7 +89,7 @@ class LMS(Process):
 		while self.stopped.empty():
 			self.ser.write(serial.to_bytes([0x02,0x00,0x02,0x00,0x30,0x01,0x31,0x18])) # Single Scan
 			response = self.ser.read()
-			
+
 			if binascii.hexlify(response) == b'02':
 				response = self.ser.read()
 				if binascii.hexlify(response) == b'80':
@@ -109,8 +109,8 @@ class LMS(Process):
 					for i in range(0, num):
 						data_low = self.ser.read()
 						data_high = self.ser.read()
-						data[i] = int(binascii.hexlify(data_high+data_low), 16)
-						
+						data[i] = int(binascii.hexlify(data_high+data_low), 16)/10
+
 					# Finished data transmission, pick up final message
 					status = self.ser.read()
 					response = self.ser.readline()
