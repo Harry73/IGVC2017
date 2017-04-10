@@ -59,7 +59,6 @@ class LMS(Process):
 				response = self.ser.read()
 				if binascii.hexlify(response) == b'80':
 					response = self.ser.readline()
-					len = "{0:x}".format(response[1]+response[0])
 					response2 = "{0:x}".format(response[2])
 
 					if response2 == '90':
@@ -96,7 +95,6 @@ class LMS(Process):
 				if binascii.hexlify(response) == b'80':
 					len_low = self.ser.read()
 					len_high = self.ser.read()
-					len = int(binascii.hexlify(len_high+len_low), 16)
 					response = self.ser.read()
 					num_low = self.ser.read()
 					num_high = self.ser.read()
@@ -106,9 +104,9 @@ class LMS(Process):
 						unit = ' mm '
 					num = int(binascii.hexlify(num_high+num_low), 16) & int('0x3FFF', 16)
 
-					data = [0] * (num+1)	# The actual data read from the LMS
+					data = [0] * (num)	# The actual data read from the LMS
 
-					for i in range(1, num+1):
+					for i in range(0, num):
 						data_low = self.ser.read()
 						data_high = self.ser.read()
 						data[i] = int(binascii.hexlify(data_high+data_low), 16)
