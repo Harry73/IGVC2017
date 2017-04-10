@@ -41,9 +41,8 @@ class Avoidance(Process):
 		self.motors = Motors()
 		self.motors.start()
 		self.motors.restart()
-		
+
 		self.queue = Queue()
-		self.queue.put(self.motors)
 
 	def run(self):
 		map_width = 100*12*2.54				# cm
@@ -60,14 +59,12 @@ class Avoidance(Process):
 
 		# Create initial map of environment
 		map = AStar(map_width, map_height, vehicle_width)
-		
-		self.motors = self.queue.get()
 
 		while self.queue.empty():
 			data = 500000*np.ones(360)
 
 			# TODO: Update location based on GPS
-			data[0:182] = self.sensors.lidar_data()				# Get LiDAR data
+			data[0:181] = self.sensors.lidar_data()				# Get LiDAR data
 			self.direction = (self.sensors.compass_data())[0]	# Get compass degrees
 			self.direction = (self.direction - (self.initial_direction-self.normal_direction)) % 360 # Normalize direction to programatic world
 			self.location = (0, 0)
@@ -146,8 +143,9 @@ class Avoidance(Process):
 			# TODO: send instructions to motor control
 			# Calculate speed and turning based on amount of turn desired
 			angle_change = viable_angles[min_index] - self.direction
-			speed_signal = 3*math.fabs(angle_change)/20 - 150
+			speed_signal = 20*math.fabs(angle_change)/3 + 1000
 			turn_signal = -100*angle_change/9 + 1000
+			print("Speed: {0}".format(speed_signal))
 			print("Turn to: {0}".format(angle_change))
 			print("Turn signal: {0}".format(turn_signal))
 #			self.motors.drive(speed_signal)
