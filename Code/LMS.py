@@ -114,7 +114,7 @@ class LMS(Process):
 					# Finished data transmission, pick up final message
 					status = self.ser.read()
 					response = self.ser.readline()
-					
+
 					# Push the data on the stack thread-safely
 					self.lms_s.acquire()
 					self.lms_data_stack.append(data)

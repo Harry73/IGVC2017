@@ -68,22 +68,22 @@ class GPS(Process):
 
 	def stop(self):
 		self.stopped.put(True)
-		
+
 # Test run
 if __name__ == "__main__":
 	import os
 	from multiprocessing import Semaphore, Manager
-	
+
 	gps_coords_stack = Manager().list()
 	gps = GPS(gps_coords_stack, Semaphore(0), Semaphore(1), "/dev/" + os.readlink("/dev/IGVC_GPS"))
-	
+
 	gps.start()
-	
+
 	time.sleep(10)
-	
+
 	gps.stop()
 	gps.join()
-	
+
 	for set in gps_coords_stack:
 		print(set)
 		print("---------------------------")

@@ -36,10 +36,10 @@ class Motors(Process):
 		while True:
 			if not self.control_queue.empty():
 				self.stopped = self.control_queue.get()
-				
+
 			if not self.steer_queue.empty():
 				self.steering_pulse = self.steer_queue.get()
-		
+
 			if self.stopped == 1:
 				pass
 			elif self.stopped == 0:

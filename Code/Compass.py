@@ -65,22 +65,22 @@ class Compass(Process):
 	# Tell run() to end
 	def stop(self):
 		self.stopped.put(True)
-		
+
 # Test run
 if __name__ == "__main__":
 	import os
 	from multiprocessing import Semaphore, Manager
-	
+
 	compass_data_stack = Manager().list()
 	compass = Compass(compass_data_stack, Semaphore(0), Semaphore(1))
-	
+
 	compass.start()
-	
+
 	time.sleep(10)
-	
+
 	compass.stop()
 	compass.join()
-	
+
 	for set in compass_data_stack:
 		print(set)
 		print("---------------------------")

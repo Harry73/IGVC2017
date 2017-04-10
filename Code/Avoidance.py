@@ -29,9 +29,9 @@ class Avoidance(Process):
 		self.sensors = sensors
 
 		# Initial conditions in the programmatic world
-		self.normal_location = (600, 580)
+		self.normal_location = (1830, 6650)
 		self.normal_direction = 180
-		self.normal_goal = (600, 80)
+		self.normal_goal = (1000, 6650)
 
 		self.initial_direction = (
 			(sensors.compass_data())[0] +
@@ -45,8 +45,8 @@ class Avoidance(Process):
 		self.queue = Queue()
 
 	def run(self):
-		map_width = 100*12*2.54				# cm
-		map_height = 200*12*2.54			# cm
+		map_width = 120*12*2.54				# cm
+		map_height = 220*12*2.54			# cm
 
 		vehicle_width = 35*2.54		# Width of agent (cm)
 
@@ -67,7 +67,7 @@ class Avoidance(Process):
 			data[0:181] = self.sensors.lidar_data()				# Get LiDAR data
 			self.direction = (self.sensors.compass_data())[0]	# Get compass degrees
 			self.direction = (self.direction - (self.initial_direction-self.normal_direction)) % 360 # Normalize direction to programatic world
-			self.location = (0, 0)
+			self.location = (1830, 6650)
 
 			# Add in past 2 data sets from sensors
 			for sample in map.last_data_set:

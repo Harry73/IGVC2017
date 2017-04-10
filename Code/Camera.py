@@ -84,28 +84,28 @@ class Camera(Process):
 	# Tell run() to end
 	def stop(self):
 		self.stopped.put(True)
-		
+
 # Test run
 if __name__ == "__main__":
 	import os
 	from multiprocessing import Semaphore, Manager
-	
+
 	camera_data_stack = Manager().list()
 	camera = Camera(
-		camera_data_stack, 
-		Semaphore(0), 
-		Semaphore(1), 
-		int(os.readlink("/dev/IGVC_RIGHT_CAMERA")[-1]), 
+		camera_data_stack,
+		Semaphore(0),
+		Semaphore(1),
+		int(os.readlink("/dev/IGVC_RIGHT_CAMERA")[-1]),
 		int(os.readlink("/dev/IGVC_LEFT_CAMERA")[-1])
 	)
-	
+
 	camera.start()
-	
+
 	time.sleep(10)
-	
+
 	camera.stop()
 	camera.join()
-	
+
 	for set in camera_data_stack:
 		print(set)
 		print("---------------------------")

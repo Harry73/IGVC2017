@@ -18,7 +18,7 @@ class Cell(object):
 	# toString method called by print()
 	def __repr__(self):
 		return "(" + str(self.x) + ", " + str(self.y) + ")"
-		
+
 	# Comparison methods
 	def __eq(self, other):
 		return (self.f == other.f)
@@ -39,7 +39,7 @@ class AStar(object):
 		self.explored = set()	# explored list
 		self.grid = []
 		self.threshold = 1
-		
+
 		self.last_data_set = []
 
 		# initialize grid
@@ -70,15 +70,15 @@ class AStar(object):
 
 			# Increase likelihood that grid tile has an obstacle
 			self.get_cell(math.floor(x/self.xscale), math.floor(y/self.yscale)).points += 1
-			
-		self.last_data_set = positions	
-			
+
+		self.last_data_set = positions
+
 	def set_start(self, start):
 		self.start = self.get_cell(*start)
-		
+
 	def set_goal(self, goal):
 		self.goal = self.get_cell(*goal)
-			
+
 	# Calculate heuristic value of cell (manhattan distance), slightly greedy
 	def get_heuristic(self, cell):
 		return 6*(abs(cell.x - self.goal.x) + abs(cell.y - self.goal.y))
@@ -158,7 +158,7 @@ class AStar(object):
 						self.update_cell(adj_cell, cell)
 						# add adj cell to open list
 						heapq.heappush(self.frontier, (adj_cell.f, adj_cell))
-						
+
 		if self.threshold < 50:
 			self.threshold += 5
 			return self.solve()
@@ -168,14 +168,14 @@ if __name__ == "__main__":
 	a = AStar(3048, 6096, 89)
 	a.set_start((1, 1))
 	a.set_goal((10, 10))
-	
+
 	# Trap robot with walls
 	a.get_cell(1, 2).points += 5
 	a.get_cell(2, 1).points += 5
 	a.get_cell(2, 2).points += 5
 	a.get_cell(2, 0).points += 5
 	a.get_cell(0, 2).points += 5
-	
+
 	path = a.solve()	# Find a path
 	print(path)
 	print(a.threshold)
