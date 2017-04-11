@@ -56,6 +56,8 @@ class Avoidance(Process):
 		self.queue = Queue()
 
 	def run(self):
+		repeat = False
+
 		map_width = 120*12*2.54		# cm
 		map_height = 220*12*2.54	# cm
 
@@ -95,29 +97,30 @@ class Avoidance(Process):
 		yshift = 1	# TODO
 
 		while self.queue.empty():
-			data = 500000*np.ones(360)
+			if not repeat:
+				data = 500000*np.ones(360)
 
-			# Get LiDAR data
-			data[0:181] = self.sensors.lidar_data()
+				# Get LiDAR data
+				data[0:181] = self.sensors.lidar_data()
 
-			# Get direction from compass and normalize to programmatic world
-			self.direction = (self.sensors.compass_data())[0]
-			self.direction = (self.direction - (self.initial_direction-self.normal_direction)) % 360
+				# Get direction from compass and normalize to programmatic world
+				self.direction = self.sensors.compass_data()
+				self.direction = (self.direction - (self.initial_direction-self.normal_direction)) % 360
 
-			# Rotate, scale, and translate GPS coordinates to programmatic world
-			self.location = np.array(self.sensors.gps_data())
-			transform = np.array([
-				[np.cos(theta_shift), -np.sin(theta_shift)],
-				[np.sin(theta_shift), np.cos(theta_shift)]
-			])
-			self.location = np.dot(transform, self.location)	# Unrotate GPS coordinates
-			self.location = np.append(self.location, [1])		# Add bias term to allow translation
-			transform = np.array([
-				[xscale, 0, xshift],
-				[0, yscale, yshift]
-			])
-			self.location = np.dot(transform, self.location)	# Scale and translate to correct range
-			self.location = self.location[:2]					# Throw out bias term
+				# Rotate, scale, and translate GPS coordinates to programmatic world
+				self.location = np.array(self.sensors.gps_data())
+				transform = np.array([
+					[np.cos(theta_shift), -np.sin(theta_shift)],
+					[np.sin(theta_shift), np.cos(theta_shift)]
+				])
+				self.location = np.dot(transform, self.location)	# Unrotate GPS coordinates
+				self.location = np.append(self.location, [1])		# Add bias term to allow translation
+				transform = np.array([
+					[xscale, 0, xshift],
+					[0, yscale, yshift]
+				])
+				self.location = np.dot(transform, self.location)	# Scale and translate to correct range
+				self.location = tuple(self.location[:2])			# Throw out bias term
 
 
 			# Add in past data set from LiDAR
@@ -164,6 +167,8 @@ class Avoidance(Process):
 				if R > buff_width/2:
 					print("No viable angles, decreasing R")
 					R = int(R*0.9)
+					self.motors.drive(1360)
+					repeat = True
 					continue
 				else:	# Stuck situation
 					# TODO: Use A* and Map to find a path out
@@ -172,6 +177,7 @@ class Avoidance(Process):
 					break
 			else:
 				R = MAX_R
+				repeat = False
 
 			# Determine which viable angle will move you towards goal the fastest
 			min_index = 0
@@ -191,18 +197,15 @@ class Avoidance(Process):
 			# Record the resulting data
 			map.record_data(data, self.location, self.direction)
 
-			# TODO: send instructions to motor control
 			# Calculate speed and turning based on amount of turn desired
-			angle_change = viable_angles[min_index] - self.direction
-			speed_signal = 20*math.fabs(angle_change)/3 + 1000
-			turn_signal = -100*angle_change/9 + 1000
+			angle_change = self.direction - viable_angles[min_index]
+			speed_signal = int(20*math.fabs(angle_change)/3 + 1000)
+			turn_signal = int(-100*angle_change/9 + 1000)
 			print("Speed: {0}".format(speed_signal))
 			print("Turn to: {0}".format(angle_change))
 			print("Turn signal: {0}".format(turn_signal))
-#			self.motors.drive(speed_signal)
-			self.motors.turn(int(turn_signal))
-			#location = min_location
-			#direction = viable_angles[min_index]
+			self.motors.drive(speed_signal)
+			self.motors.turn(turn_signal)
 
 	def stop(self):
 		self.motors.terminate()
