@@ -1,7 +1,7 @@
 """
-File: LMS.py
+File: LIDAR.py
 
-Description: LMS Data Collector
+Description: LiDAR Data Collector
 	Send serial commands to set up the LiDAR device.
 
 	Collects a new set of data every 1 second
@@ -16,19 +16,19 @@ import binascii
 import numpy as np
 from multiprocessing import Process, Queue
 
-class LMS(Process):
+class LIDAR(Process):
 
-	def __init__(self, lms_data_stack, lms_n, lms_s, device_path):
+	def __init__(self, lidar_data_stack, lidar_n, lidar_s, device_path):
 		# Call Process initializer
-		super(LMS, self).__init__()
+		super(LIDAR, self).__init__()
 
 		# Get IGVC logger
 		self.logger = logging.getLogger("IGVC")
 
 		# Save stack and semaphores
-		self.lms_data_stack = lms_data_stack
-		self.lms_n = lms_n
-		self.lms_s = lms_s
+		self.lidar_data_stack = lidar_data_stack
+		self.lidar_n = lidar_n
+		self.lidar_s = lidar_s
 		self.stopped = Queue()
 
 		# Set up serial port
@@ -104,7 +104,7 @@ class LMS(Process):
 						unit = ' mm '
 					num = int(binascii.hexlify(num_high+num_low), 16) & int('0x3FFF', 16)
 
-					data = [0] * (num)	# The actual data read from the LMS
+					data = [0] * (num)	# The actual data read from the LiDAR
 
 					for i in range(0, num):
 						data_low = self.ser.read()
@@ -116,10 +116,10 @@ class LMS(Process):
 					response = self.ser.readline()
 
 					# Push the data on the stack thread-safely
-					self.lms_s.acquire()
-					self.lms_data_stack.append(data)
-					self.lms_s.release()
-					self.lms_n.release()
+					self.lidar_s.acquire()
+					self.lidar_data_stack.append(data)
+					self.lidar_s.release()
+					self.lidar_n.release()
 
 	def stop(self):
 		self.stopped.put(True)
@@ -129,16 +129,16 @@ if __name__ == "__main__":
 	import os
 	from multiprocessing import Semaphore, Manager
 
-	lms_data_stack = Manager().list()
-	lms = LMS(lms_data_stack, Semaphore(0), Semaphore(1), "/dev/" + os.readlink("/dev/IGVC_LIDAR"))
+	lidar_data_stack = Manager().list()
+	lidar = LIDAR(lidar_data_stack, Semaphore(0), Semaphore(1), "/dev/" + os.readlink("/dev/IGVC_LIDAR"))
 
-	lms.start()
+	lidar.start()
 
 	time.sleep(10)
 
-	lms.stop()
-	lms.join()
+	lidar.stop()
+	lidar.join()
 
-	for set in lms_data_stack:
+	for set in lidar_data_stack:
 		print(set)
 		print("---------------------------")

@@ -6,7 +6,7 @@ Description: Starts threads to manage sensors and run vehicle
 	of each usb device.
 
 	Behavior:
-	1) Starts GPS, LMS, Camera, and Compass threads.
+	1) Starts GPS, LIDAR, Camera, and Compass threads.
 	2) Waits for motor controller to be turned on.
 	3) Begins autonomous navigation using Avoidance.py.
 	4) Eventually stops all the threads and prints information.
@@ -17,7 +17,7 @@ import time
 import logging
 import wiringpi2 as wpi
 from GPS import GPS
-from LMS import LMS
+from LIDAR import LIDAR
 from Camera import Camera
 from Compass import Compass
 from Sensors import Sensors
@@ -46,12 +46,12 @@ def main():
 	gps_sensor = GPS(gps_coords_stack, gps_n, gps_s, device_to_path["GPS"])
 	logger.debug("GPS setup complete")
 
-	# LMS setup
+	# LiDAR setup
 	logger.debug("Beginning LiDAR setup")
-	lms_data_stack = Manager().list()
-	lms_n = Semaphore(0)
-	lms_s = Semaphore(1)
-	lms_sensor = LMS(lms_data_stack, lms_n, lms_s, device_to_path["LMS"])
+	lidar_data_stack = Manager().list()
+	lidar_n = Semaphore(0)
+	lidar_s = Semaphore(1)
+	lidar_sensor = LIDAR(lidar_data_stack, lidar_n, lidar_s, device_to_path["LIDAR"])
 	logger.debug("LiDAR setup complete")
 
 	# Camera setup
@@ -73,7 +73,7 @@ def main():
 	# Wrap all the sensors' stacks and semaphores into 1 object
 	sensors = Sensors(
 		gps_coords_stack, gps_n, gps_s,
-		lms_data_stack, lms_n, lms_s,
+		lidar_data_stack, lidar_n, lidar_s,
 		camera_lines_stack, camera_n, camera_s,
 		compass_stack, compass_n, compass_s
 	)
@@ -83,7 +83,7 @@ def main():
 	logger.debug("Starting GPS thread")
 	gps_sensor.start()
 	logger.debug("Startting LiDAR thread")
-	lms_sensor.start()
+	lidar_sensor.start()
 	logger.debug("Starting camera thread")
 	camera_controller.start();
 	logger.debug("Starting compass thread")
@@ -116,7 +116,7 @@ def main():
 	path_find.stop()
 	time.sleep(1)
 	gps_sensor.stop()
-	lms_sensor.stop()
+	lidar_sensor.stop()
 	camera_controller.stop()
 	compass.stop()
 
@@ -124,7 +124,7 @@ def main():
 	logger.debug("Waiting for threads to end")
 	path_find.join()
 	gps_sensor.join()
-	lms_sensor.join()
+	lidar_sensor.join()
 	camera_controller.join()
 	compass.join()
 
@@ -132,8 +132,8 @@ def main():
 	print(camera_lines_stack)
 	print("--------------- GPS STACK ---------------")
 	print(gps_coords_stack)
-	print("--------------- LMS STACK ---------------")
-	print(lms_data_stack)
+	print("--------------- LIDAR STACK ---------------")
+	print(lidar_data_stack)
 	print("--------------- COMPASS STACK ---------------")
 	print(compass_stack)
 	print("--------------- DONE ---------------")
@@ -148,7 +148,7 @@ def get_device_paths():
 	# Create dictionary of device to path
 	device_to_path = {}
 	device_to_path["GPS"] = "/dev/" + gps_path
-	device_to_path["LMS"] = "/dev/" + lidar_path
+	device_to_path["LIDAR"] = "/dev/" + lidar_path
 	device_to_path["RIGHT_CAM"] = right_camera_index
 	device_to_path["LEFT_CAM"] = left_camera_index
 
