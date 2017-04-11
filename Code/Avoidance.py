@@ -33,11 +33,22 @@ class Avoidance(Process):
 		self.normal_direction = 180
 		self.normal_goal = (1000, 6650)
 
+		# Average three values for the initial real-world direction and location
 		self.initial_direction = (
-			(sensors.compass_data())[0] +
-			(sensors.compass_data())[0] +
-			(sensors.compass_data())[0])/3
+			sensors.compass_data() +
+			sensors.compass_data() +
+			sensors.compass_data()
+		)/3
 
+		loc1 = sensors.gps_data()
+		loc2 = sensors.gps_data()
+		loc3 = sensors.gps_data()
+		self.initial_location = (
+			(loc1[0] + loc2[0] + loc3[0])/3,
+			(loc1[1] + loc2[1] + loc3[1])/3
+		)
+
+		# Start the vehicle motors
 		self.motors = Motors()
 		self.motors.start()
 		self.motors.restart()
@@ -45,31 +56,71 @@ class Avoidance(Process):
 		self.queue = Queue()
 
 	def run(self):
-		map_width = 120*12*2.54				# cm
-		map_height = 220*12*2.54			# cm
+		map_width = 120*12*2.54		# cm
+		map_height = 220*12*2.54	# cm
 
 		vehicle_width = 35*2.54		# Width of agent (cm)
 
 		buffer_distance = 12*2.54	# Space to keep between agent and obstacles (cm)
 		buff_width = vehicle_width + buffer_distance
 
-		MAX_R = int(10*12*2.54)		# Maximum distance to consider (cm)
+		MAX_R = int(10*12*2.54)		# Maximum distance to ever consider (cm)
 		R = MAX_R					# Maximum distance to consider for a iteration
 		move_scale = 0.25			# Percentage of R to actually move
 
 		# Create initial map of environment
 		map = AStar(map_width, map_height, vehicle_width)
 
+		# GPS calculations
+		"""
+		phi 	latitude	longitude
+		0		110.574		111.32
+		15		110.649		107.55
+		30		110.852		96.486
+		45		111.132		78.847
+		60		111.412		55.8
+		75		111.618		28.902
+		90		111.694		0
+		"""
+		# Linear interpolation using known values
+		deg_lat = (110.852 - 111.132)/(30 - 45)*(self.initial_position[0] - 45) + 111.132
+		deg_long = (96.486 - 78.847)/(30 - 45)*(self.initial_position[0] - 45) + 78.847
+		deg_lat *= 1000*100		# Convert to cm
+		deg_long  *= 1000*100	# Convert to cm
+
+		theta_shift = self.normal_direction - self.initial_direction
+		xscale = 1	# TODO
+		yscale = 1	# TODO
+		xshift = 1	# TODO
+		yshift = 1	# TODO
+
 		while self.queue.empty():
 			data = 500000*np.ones(360)
 
-			# TODO: Update location based on GPS
-			data[0:181] = self.sensors.lidar_data()				# Get LiDAR data
-			self.direction = (self.sensors.compass_data())[0]	# Get compass degrees
-			self.direction = (self.direction - (self.initial_direction-self.normal_direction)) % 360 # Normalize direction to programatic world
-			self.location = (1830, 6650)
+			# Get LiDAR data
+			data[0:181] = self.sensors.lidar_data()
 
-			# Add in past 2 data sets from sensors
+			# Get direction from compass and normalize to programmatic world
+			self.direction = (self.sensors.compass_data())[0]
+			self.direction = (self.direction - (self.initial_direction-self.normal_direction)) % 360
+
+			# Rotate, scale, and translate GPS coordinates to programmatic world
+			self.location = np.array(self.sensors.gps_data())
+			transform = np.array([
+				[np.cos(theta_shift), -np.sin(theta_shift)],
+				[np.sin(theta_shift), np.cos(theta_shift)]
+			])
+			self.location = np.dot(transform, self.location)	# Unrotate GPS coordinates
+			self.location = np.append(self.location, [1])		# Add bias term to allow translation
+			transform = np.array([
+				[xscale, 0, xshift],
+				[0, yscale, yshift]
+			])
+			self.location = np.dot(transform, self.location)	# Scale and translate to correct range
+			self.location = self.location[:2]					# Throw out bias term
+
+
+			# Add in past data set from LiDAR
 			for sample in map.last_data_set:
 				r = math.sqrt(math.pow(self.location[0]-sample[0], 2) + math.pow(self.location[1]-sample[1], 2))
 				theta = math.atan2(self.location[1]-sample[1], self.location[0]-sample[0])
@@ -116,7 +167,7 @@ class Avoidance(Process):
 					continue
 				else:	# Stuck situation
 					# TODO: Use A* and Map to find a path out
-#					motors.stop()
+					motors.stop()
 					print("Help, I'm stuck and too stupid to get out!")
 					break
 			else:
