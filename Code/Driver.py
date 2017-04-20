@@ -1,15 +1,15 @@
 """
 File: Driver.py
 
-Description: Starts threads to manage sensors and run vehicle
+Description: Starts processes to manage sensors and run vehicle
 	Uses links created by udev rules to determine the hardware path
 	of each usb device.
 
 	Behavior:
-	1) Starts GPS, LIDAR, Camera, and Compass threads.
+	1) Starts GPS, LIDAR, Camera, and Compass processes.
 	2) Waits for motor controller to be turned on.
 	3) Begins autonomous navigation using Avoidance.py.
-	4) Eventually stops all the threads and prints information.
+	4) Eventually stops all the processes and prints information.
 """
 
 import os
@@ -78,20 +78,20 @@ def main():
 		compass_stack, compass_n, compass_s
 	)
 
-	# Start the sensor threads
+	# Start the sensor processes
 	logger.debug("Setup complete")
-	logger.debug("Starting GPS thread")
+	logger.debug("Starting GPS process")
 	gps_sensor.start()
-	logger.debug("Startting LiDAR thread")
+	logger.debug("Startting LiDAR process")
 	lidar_sensor.start()
-	logger.debug("Starting camera thread")
+	logger.debug("Starting camera process")
 	camera_controller.start();
-	logger.debug("Starting compass thread")
+	logger.debug("Starting compass process")
 	compass.start();
 
 
 	# Set up wiringpi2 and GPIO pin 6 as input
-	logger.debug("Sensor threads started, waiting for motors to turn on")
+	logger.debug("Sensor process started, waiting for motors to turn on")
 	motors_on_pin = 6
 	wpi.wiringPiSetup()
 	wpi.pinMode(motors_on_pin, 0)
@@ -111,8 +111,8 @@ def main():
 
 	time.sleep(10)
 
-	# Stop the threads
-	logger.debug("Calling for threads to stop")
+	# Stop the processes
+	logger.debug("Calling for processes to stop")
 	path_find.stop()
 	time.sleep(1)
 	gps_sensor.stop()
@@ -120,8 +120,8 @@ def main():
 	camera_controller.stop()
 	compass.stop()
 
-	# Clean up the threads
-	logger.debug("Waiting for threads to end")
+	# Clean up the processes
+	logger.debug("Waiting for processes to end")
 	path_find.join()
 	gps_sensor.join()
 	lidar_sensor.join()

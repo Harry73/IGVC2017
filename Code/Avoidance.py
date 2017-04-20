@@ -57,6 +57,8 @@ class Avoidance(Process):
 
 	def run(self):
 		repeat = False
+		speed_signal = 1360
+		turn_signal = 1200
 
 		map_width = 120*12*2.54		# cm
 		map_height = 220*12*2.54	# cm
@@ -200,7 +202,7 @@ class Avoidance(Process):
 			# Calculate speed and turning based on amount of turn desired
 			angle_change = self.direction - viable_angles[min_index]
 			speed_signal = int(20*math.fabs(angle_change)/3 + 1000)
-			turn_signal = int(-100*angle_change/9 + 1000)
+			turn_signal = int(-80*angle_change/9 + 1200)
 			print("Speed: {0}".format(speed_signal))
 			print("Turn to: {0}".format(angle_change))
 			print("Turn signal: {0}".format(turn_signal))
