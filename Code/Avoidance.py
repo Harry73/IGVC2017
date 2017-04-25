@@ -89,14 +89,21 @@ class Avoidance(Process):
 		# Linear interpolation using known values
 		deg_lat = (110.852 - 111.132)/(30 - 45)*(self.initial_position[0] - 45) + 111.132
 		deg_long = (96.486 - 78.847)/(30 - 45)*(self.initial_position[0] - 45) + 78.847
-		deg_lat *= 1000*100		# Convert to cm
-		deg_long  *= 1000*100	# Convert to cm
+		deg_lat *= 1000*100		# 1 degree latitude = deg_lat cm
+		deg_long *= 1000*100	# 1 degree longitude = deg_long cm
+
+		angle_to_00 = self.initial_direction - math.atan2(self.normal_location[1], self.normal_location[0])
+		distance_to_00 = math.sqrt(self.normal_location[0]**2 + self.normal_location[1]**2)
+		zero_zero = (
+			initial_position[0] - distance_to_00*math.cos(angle_to_00)*deg_lat,
+			initial_position[1] - distance_to_00*math.sin(angle_to_00)*deg_long
+		)
+		xscale = (zero_zero[0]-self.initial_position[0])/(0-self.normal_location[0])	# Slope
+		yscale = (zero_zero[1]-self.initial_position[1])/(0-self.normal_location[1])	# Slope
+		xshift = -xscale*self.normal_location[0] + self.initial_position[0]				# "y" intercept
+		yshift = -yscale*self.normal_location[1] + self.initial_position[1]				# "y" intercept
 
 		theta_shift = self.normal_direction - self.initial_direction
-		xscale = 1	# TODO
-		yscale = 1	# TODO
-		xshift = 1	# TODO
-		yshift = 1	# TODO
 
 		while self.queue.empty():
 			if not repeat:
@@ -127,7 +134,7 @@ class Avoidance(Process):
 
 			# Add in past data set from LiDAR
 			for sample in map.last_data_set:
-				r = math.sqrt(math.pow(self.location[0]-sample[0], 2) + math.pow(self.location[1]-sample[1], 2))
+				r = math.sqrt((self.location[0]-sample[0])**2 + (self.location[1]-sample[1])**2)
 				theta = math.atan2(self.location[1]-sample[1], self.location[0]-sample[0])
 				theta = np.pi - theta	# Needed because y coordinates are upside down
 				theta = (theta*180/np.pi - (self.direction-90))	# Find relative angle from absolute
@@ -188,7 +195,7 @@ class Avoidance(Process):
 				# Simulate moving forward R movement at the current angle and calculate distance to goal
 				x = self.location[0] + move_scale*R*np.cos(angle*np.pi/180)
 				y = self.location[1] - move_scale*R*np.sin(angle*np.pi/180)
-				sim_distance = math.sqrt(math.pow(x-self.normal_goal[0], 2) + math.pow(y-self.normal_goal[1], 2))
+				sim_distance = math.sqrt((x-self.normal_goal[0])**2 + (y-self.normal_goal[1])**2)
 
 				# Keep the minimum distance to find the most efficient angle
 				if sim_distance < min_distance:
