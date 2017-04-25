@@ -68,3 +68,24 @@ class Sensors():
 		self.compass_s.release()
 
 		return result
+
+	def clear_all(self):
+		self.lms_n.acquire()
+		self.lms_s.acquire()
+		self.lms_data_stack.clear()
+		self.lms_s.release()
+
+		self.camera_n.acquire()
+		self.camera_s.acquire()
+		self.camera_lines_stack.clear()
+		self.camera_s.release()
+
+		self.gps_n.acquire()
+		self.gps_s.acquire()
+		self.gps_coords_stack.clear()
+		self.gps_s.release()
+
+		self.compass_n.acquire()
+		self.compass_s.acquire()
+		self.compass_stack.clear()
+		self.compass_s.release()

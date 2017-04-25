@@ -102,8 +102,10 @@ class Avoidance(Process):
 		yscale = (zero_zero[1]-self.initial_position[1])/(0-self.normal_location[1])	# Slope
 		xshift = -xscale*self.normal_location[0] + self.initial_position[0]				# "y" intercept
 		yshift = -yscale*self.normal_location[1] + self.initial_position[1]				# "y" intercept
-
 		theta_shift = self.normal_direction - self.initial_direction
+
+		# Clear the data lists
+		self.sensors.clear_all()
 
 		while self.queue.empty():
 			if not repeat:

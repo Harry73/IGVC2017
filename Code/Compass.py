@@ -47,7 +47,7 @@ class Compass(Process):
 	def run(self):
 		# Run until Driver calls for a stop
 		while self.stopped.empty():
-			time.sleep(0.5)
+			time.sleep(0.05)
 
 			# Get angle from compass
 			heading = self.compass.getHeading()
