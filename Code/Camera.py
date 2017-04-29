@@ -46,21 +46,7 @@ class Camera(Process):
 			left_lines = self.process(left_frame)
 
 			# Further processing of the two frames combined would go here...
-			"""
-			if lines != None:
-				for line in lines:
-					for rho, theta in line:
-						a = np.cos(theta)
-						b = np.sin(theta)
-						x0 = a*rho
-						y0 = b*rho
-						x1 = int(x0 + 1000*(-b))
-						y1 = int(y0 + 1000*(a))
-						x2 = int(x0 - 1000*(-b))
-						y2 = int(y0 - 1000*(a))
-
-						cv2.line(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
-			"""
+			
 
 			# Push the data on the stack thread-safely
 			self.camera_s.acquire()
@@ -75,9 +61,26 @@ class Camera(Process):
 
 	# Standard image processing sequence to be performed on each image taken
 	def process(self, frame):
-		# Canny edge detection and Hough Line Transform
-		edges = cv2.Canny(frame, 50, 150, apertureSize=3)
-		lines = cv2.HoughLines(edges, 1, np.pi/180, 150)
+		# Convert to HSV color space
+		frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+		# Remove value component
+		frame[:,:,2] = 0
+
+		# Blur the image
+		frame = cv2.GaussianBlur(frame, (31, 31), 0)
+
+		# Canny edge detection
+		frame = cv2.Canny(frame, 0, 45)
+
+		# Dilation
+		kernel = np.ones((3, 3), np.uint8)
+		frame = cv2.dilate(frame, kernel, iterations=1)
+
+		# Hough line transform
+		lines = cv2.HoughLinesP(frame, 1, np.pi/180, 100, 100, 10)
+		if lines is None:
+			self.logger.warning("No lines detected!")
 
 		return lines
 
