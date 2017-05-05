@@ -1,3 +1,15 @@
+"""
+File: AStar.py
+
+Description: A* Search Algorithm
+	Keeps a map of the environment and uses it to perform the A* search algorithm
+
+	The map is a grid, where each square records the number of times 
+	an obstacle or line has been detected in that tile. A* can run on
+	this map. If no path can be found, a threshold is increased so that
+	tiles with only a few detections are assumed to be clear.
+"""
+
 import math
 import heapq
 import numpy as np
